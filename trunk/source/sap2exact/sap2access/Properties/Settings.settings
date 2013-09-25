@@ -1,0 +1,23 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="sap2access.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="connection_string_sap" Type="(Connection string)" Scope="Application">
+      <DesignTimeValue Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
+&lt;SerializableConnectionString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
+  &lt;ConnectionString&gt;DATA SOURCE=dmc04;INITIAL CATALOG=dev;USER ID=SAPDEV;PASSWORD=SAP&lt;/ConnectionString&gt;
+&lt;/SerializableConnectionString&gt;</DesignTimeValue>
+      <Value Profile="(Default)">DATA SOURCE=dmc04;INITIAL CATALOG=dev;USER ID=SAPDEV;PASSWORD=SAP</Value>
+    </Setting>
+    <Setting Name="exportpath_xlsx" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">C:\exact importeren artikelen\test\</Value>
+    </Setting>
+    <Setting Name="connection_string_access" Type="(Connection string)" Scope="Application">
+      <DesignTimeValue Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
+&lt;SerializableConnectionString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
+  &lt;ConnectionString&gt;Provider=Microsoft.ACE.OLEDB.12.0;Data Source="C:\exact importeren artikelen\source\access\conversie.accdb"&lt;/ConnectionString&gt;
+&lt;/SerializableConnectionString&gt;</DesignTimeValue>
+      <Value Profile="(Default)">Provider=Microsoft.ACE.OLEDB.12.0;Data Source="C:\exact importeren artikelen\source\access\conversie.accdb"</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
