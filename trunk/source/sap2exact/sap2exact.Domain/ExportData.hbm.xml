@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"	namespace="access2exact.Domain" assembly="sap2exact.Domain">
+  <class name="ExportData" table="ExportData">
+    <id name="Id" >
+      <generator class="identity" />
+    </id>
+    <property name="EindArtikelen" />
+    <property name="ReceptuurArtikelen" />
+    <property name="VerpakkingsArtikelen" />
+    <property name="GrondstofArtikelen" />
+    <property name="IngredientArtikelen" />
+  </class>
+</hibernate-mapping>
