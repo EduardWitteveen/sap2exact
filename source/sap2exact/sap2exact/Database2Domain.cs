@@ -174,9 +174,14 @@ namespace access2exact
                             AND MLAN.MATNR = :matnr
                         ";
                     var belastingrow = QueryRow(belastingsql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", matnr } });
-                    Debug.Assert("NL" == Convert.ToString(belastingrow["aland"]));
-                    var taxm1 = Convert.ToInt32(belastingrow["taxm1"]);
-                    artikel.PrijsBelastingCategorie = taxm1;  //wat betekend wat?
+                    if (belastingrow != null)
+                    {
+                        Debug.Assert("NL" == Convert.ToString(belastingrow["aland"]));
+                        var taxm1 = Convert.ToInt32(belastingrow["taxm1"]);
+                        artikel.PrijsBelastingCategorie = taxm1;  //wat betekend wat?
+                    }
+                    else Console.Error.WriteLine("NO TAX FOR ARTICLE:" + matnr); 
+
                     #endregion artikel belasting                    
                     break;
                 case "HALB":
@@ -193,6 +198,8 @@ namespace access2exact
                     artikel.PrijsBelastingCategorie = 2;
                     break;
                 case "VERP":
+                case "LEER":
+                    // https://help.sap.com/saphelp_45b/helpdata/en/ff/515afd49d811d182b80000e829fbfe/content.htm
                     artikel = new Domain.VerpakkingsArtikel();
                     artikel.PrijsBelastingCategorie = 4;
                     break;
@@ -302,7 +309,15 @@ namespace access2exact
                     ";
 
                 var pricerow = QueryRow(pricesql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", matnr }, { ":bwkey", "0001" } });
-                artikel.PrijsKost = Convert.ToDouble(pricerow["stprs"]);
+                if (pricerow != null)
+                {
+                    artikel.PrijsKost = Convert.ToDouble(pricerow["stprs"]);
+                }
+                else
+                {
+                    artikel.PrijsKost = 0.0;
+                    Console.Error.WriteLine("GEEN PRIJS VOOR:" + matnr);
+                }
                 // Fix de niet 1 problemen:
                 // TODO: double check!!
                 artikel.PrijsKost = artikel.PrijsKost / artikel.VerkoopAantalNetto;
@@ -377,6 +392,12 @@ namespace access2exact
 
         private Domain.BaseSamengesteldArtikel ReadChildData(int  mandt, Domain.BaseSamengesteldArtikel artikel, int ident)
         {
+            if (ident > 10)
+            {
+                Console.Error.WriteLine("RECURSIEVE FOUT!!" + artikel.Code);
+                return artikel;
+            }
+            
             var bomsql = @"
                 -- Material to BOM Link
                 -- http://www.stechno.net/sap-tables.html?view=saptable&id=MAST
