@@ -99,27 +99,33 @@ namespace access2exact
             data = new Domain.ExportData();
 
             var artikelsql = @"
-                -- General Material Data
+                -- AUFK - Order master data
+                -- http://www.stechno.net/sap-tables.html?view=saptable&id=AUFK
+                -- AFPO: Order item
+                -- http://www.stechno.net/sap-tables.html?view=saptable&id=AFPO
+                -- MARA: General Material Data
                 -- http://www.stechno.net/sap-tables.html?view=saptable&id=MARA
-/*
-MARA: General Material Data
-http://www.stechno.net/sap-tables.html?view=saptable&id=MARA
-MKAL: Production Versions of Material
-http://www.stechno.net/sap-tables.html?view=saptable&id=MKAL
-AFPO: Order item
-http://www.stechno.net/sap-tables.html?view=saptable&id=AFPO
-MSEG: Document Segment: Material
-http://www.stechno.net/sap-tables.html?view=saptable&id=MSEG
-*/
-                SELECT 
-                    MANDT,
-                    MATNR
+                SELECT DISTINCT
+	                MARA.MANDT,
+	                MARA.MATNR
                 FROM MARA
-                WHERE MARA.MANDT= 100
-                AND  NOT MARA.MATKL = 'VERVALLEN' 
-                AND MARA.MTART = 'FERT'
-                AND MATNR LIKE '33024%' 
-                ORDER BY MARA.MATNR
+                INNER JOIN AFPO
+	                ON AFPO.MATNR = MARA.MATNR
+	                AND AFPO.MANDT  = MARA.MANDT
+                INNER JOIN AUFK
+	                ON AUFK.AUFNR = AFPO.AUFNR
+	                AND AUFK.MANDT  = AFPO.MANDT 
+                WHERE
+	                NOT MARA.MATKL = 'VERVALLEN' 
+                    AND MARA.MTART = 'FERT'
+                    -- AND MARA.MATNR LIKE '33024%' 
+	                AND
+	                (
+		                AUFK.ERDAT > 20120000 
+	                OR 
+		                AUFK.AEDAT > 20120000 
+	                ) 
+	                AND MARA.MANDT = 100
             ";
             var artikeltable = QueryTable(artikelsql);
 
@@ -127,7 +133,11 @@ http://www.stechno.net/sap-tables.html?view=saptable&id=MSEG
             {
                 int matdt = Convert.ToInt32(artikelrow["mandt"]);
                 string matnr = Convert.ToString(artikelrow["matnr"]);
-                Console.Out.WriteLine("START:" + matnr);
+
+                int huidigeregel = artikeltable.Rows.IndexOf(artikelrow);
+                int totaalregels = artikeltable.Rows.Count;
+                Console.Out.WriteLine("[ " + (int) ((100.0 / totaalregels) * huidigeregel)  + "% ] START:" + matnr);
+
                 data.Add(ReadArtikelData(matdt, matnr, 1));
             }
             return data;
@@ -340,6 +350,10 @@ http://www.stechno.net/sap-tables.html?view=saptable&id=MSEG
                         break;
                     case "F":   // frans
                         artikel.Descriptions.Add(3, description);
+                        break;
+                    case "I":   // italiaans
+                        // TODO: kan niet opgeslagen worden in exact!!
+                        artikel.Descriptions.Add(4, description);
                         break;
                     default:
                         throw new NotImplementedException("unknown langues:" + taal);
