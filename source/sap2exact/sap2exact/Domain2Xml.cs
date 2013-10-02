@@ -354,6 +354,8 @@ namespace access2exact
 
         void ExportArtikelen(Domain.ExportData data)
         {
+            // WE NEGEREN HIER DE INGREDIENTEN!!!
+
             foreach (Domain.GrondstofArtikel grondstofartikel in data.GrondstofArtikelen.Values)
             {
                 items.AppendChild(xmldocument.CreateComment("GrondStof:" + grondstofartikel.Code));
