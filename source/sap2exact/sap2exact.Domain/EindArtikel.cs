@@ -7,8 +7,6 @@ namespace access2exact.Domain
 {
     public class EindArtikel: BaseSamengesteldArtikel
     {
-        public string Intrastat;
-        public int PrijsBelastingCategorie;
-
+        
     }
 }

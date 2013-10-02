@@ -28,7 +28,14 @@ namespace access2exact.Domain
         public string VerkoopVerpakking;
         public double VerkoopAantalNetto;
         public double VerkoopAantalBruto;
-        public string VerkoopGewichtEenheid;
+        //public string VerkoopGewichtEenheid;
+
+        public int PrijsBelastingCategorie;
+
+        public int HoudbaarheidInDagen = 234;
+
         public string TimeStamp;
+
+        public string Intrastat;
     }
 }

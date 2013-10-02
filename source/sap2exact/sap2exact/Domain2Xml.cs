@@ -44,6 +44,8 @@ namespace access2exact
 
         XmlElement CreateXmlRootArtikelElement(Domain.BaseArtikel artikel)
         {
+            System.Diagnostics.Debug.WriteLine("artikel:" + artikel.Code + " (" + artikel.GetType().Name + ")");
+
             var item = xmldocument.CreateElement("Item");
             item.SetAttribute("code", CreateSapCode(artikel.Code));
             var description = xmldocument.CreateElement("Description");
@@ -88,6 +90,11 @@ namespace access2exact
             var isbatchitem = xmldocument.CreateElement("IsBatchItem");
             isbatchitem.AppendChild(xmldocument.CreateTextNode("0"));
             item.AppendChild(isbatchitem);
+
+            var issubassemblyitem = xmldocument.CreateElement("IsSubAssemblyItem");
+            string issubassembly = artikel.GetType() != typeof(Domain.EindArtikel) ? "1" : "0";
+            issubassemblyitem.AppendChild(xmldocument.CreateTextNode(issubassembly));
+            item.AppendChild(issubassemblyitem);
 
             var isassembleditem = xmldocument.CreateElement("IsAssembledItem");
             // 1 if type = samengesteld
@@ -170,25 +177,26 @@ namespace access2exact
         private XmlNode CreateXmlSalesElement(Domain.BaseArtikel artikel)
         {
             var sales = xmldocument.CreateElement("Sales");
-            if (artikel.GetType() == typeof(Domain.EindArtikel))
-            {
-                Domain.EindArtikel eartikel = (Domain.EindArtikel)artikel;
+//            if (artikel.GetType() == typeof(Domain.EindArtikel))
+//            {
                 var price = xmldocument.CreateElement("Price");
                 var currency = xmldocument.CreateElement("Currency");
                 currency.SetAttribute("code", "EUR");
                 price.AppendChild(currency);
                 var value = xmldocument.CreateElement("Value");
-                value.AppendChild(xmldocument.CreateTextNode(Convert.ToString(eartikel.PrijsVerkoop)));
+                value.AppendChild(xmldocument.CreateTextNode(Convert.ToString(artikel.PrijsVerkoop)));
                 price.AppendChild(value);
                 var vat = xmldocument.CreateElement("VAT");
-                vat.SetAttribute("code", Convert.ToString(eartikel.PrijsBelastingCategorie));
+                vat.SetAttribute("code", Convert.ToString(artikel.PrijsBelastingCategorie));
                 vat.SetAttribute("type", "B");
                 vat.SetAttribute("vattype", "E");
                 //vat.SetAttribute("taxtype", "V");
                 price.AppendChild(vat);
                 sales.AppendChild(price);
-            }            
+//            }            
             var unit = xmldocument.CreateElement("Unit");
+            //unit.SetAttribute("unit", artikel.PrijsEenheid);
+            //unit.SetAttribute("unit", artikel.VerkoopVerpakking);
             unit.SetAttribute("unit", artikel.PrijsEenheid);
             unit.SetAttribute("type", "W");
             unit.SetAttribute("active", "1");
@@ -223,6 +231,12 @@ namespace access2exact
                 if (stuklijstnaam.Length == 0) stuklijstnaam = "Standaard";
                 description.AppendChild(xmldocument.CreateTextNode(stuklijstnaam));
                 bom.AppendChild(description);
+
+                var effectivedate  = xmldocument.CreateElement("EffectiveDate");
+                effectivedate.AppendChild(xmldocument.CreateTextNode(
+                    String.Format("{0:yyyy-MM-dd}", stuklijst.StuklijstDatum)
+                    ));
+                bom.AppendChild(effectivedate);
 
                 var quantity = xmldocument.CreateElement("Quantity");
                 quantity.AppendChild(xmldocument.CreateTextNode(stuklijst.StuklijstTotaalAantal.ToString()));
@@ -278,6 +292,11 @@ namespace access2exact
                 leverancierscode = "999980";
                 leverancierstekst = "Grondstof:" + artikel.Code;
             }
+            else if (artikel.GetType() == typeof(Domain.VerpakkingsArtikel))
+            {
+                leverancierscode = "999980";
+                leverancierstekst = "Verpakking:" + artikel.Code;
+            }
             account.SetAttribute("code", leverancierscode);
             itemaccount.AppendChild(account);
             var itemcode = xmldocument.CreateElement("ItemCode");
@@ -295,7 +314,8 @@ namespace access2exact
             price.AppendChild(value);
 
             var unit = xmldocument.CreateElement("Unit");
-            unit.SetAttribute("unit", artikel.VerkoopVerpakking);
+            //unit.SetAttribute("unit", artikel.VerkoopVerpakking);
+            unit.SetAttribute("unit", artikel.VerkoopVerpakking);            
             unit.SetAttribute("type", "O");
             unit.SetAttribute("active", "1");
             purchase.AppendChild(unit);
@@ -308,7 +328,6 @@ namespace access2exact
             itemaccounts.AppendChild(itemaccount);
             item.AppendChild(itemaccounts);
 
-
             // magazijn info
             var itemwarehouses = xmldocument.CreateElement("ItemWarehouses");
             var itemwarehouse = xmldocument.CreateElement("ItemWarehouse");
@@ -319,6 +338,17 @@ namespace access2exact
             itemwarehouses.AppendChild(itemwarehouse);
             item.AppendChild(itemwarehouses);
 
+            // houdbaarheid in dagen
+            var shelflife = xmldocument.CreateElement("ShelfLife");
+            //shelflife.AppendChild(xmldocument.CreateTextNode(Convert.ToString(artikel.HoudbaarheidInDagen)));
+            shelflife.AppendChild(xmldocument.CreateTextNode("0"));
+            item.AppendChild(shelflife);            
+
+            // classificatie icp = goederen
+            var classification = xmldocument.CreateElement("TaxItemClassification");
+            classification.AppendChild(xmldocument.CreateTextNode("10"));
+            item.AppendChild(classification);
+
             return item;
         }
 
@@ -328,6 +358,7 @@ namespace access2exact
             {
                 items.AppendChild(xmldocument.CreateComment("GrondStof:" + grondstofartikel.Code));
                 var item = CreateXmlRootArtikelElement(grondstofartikel);
+                item = AddXmlVrijeveldenArtikel(item, grondstofartikel);
                 item = AddXmlRootArtikelFooter(item, grondstofartikel);
                 items.AppendChild(item);
             }
@@ -335,6 +366,7 @@ namespace access2exact
             {
                 items.AppendChild(xmldocument.CreateComment("Verpakking:" + verpakkingartikel.Code));
                 var item = CreateXmlRootArtikelElement(verpakkingartikel);
+                item = AddXmlVrijeveldenArtikel(item, verpakkingartikel);
                 item = AddXmlRootArtikelFooter(item, verpakkingartikel);
                 items.AppendChild(item);
             }
@@ -342,7 +374,8 @@ namespace access2exact
             {
                 items.AppendChild(xmldocument.CreateComment("Receptuur:" + receptuurartikel.Code));
                 var item = CreateXmlRootArtikelElement(receptuurartikel);
-                item = AddXmlSamengesteldArtikel(item, receptuurartikel);
+                item = AddXmlSamengesteldArtikel(item, receptuurartikel);               
+                item = AddXmlVrijeveldenArtikel(item, receptuurartikel);
                 item = AddXmlRootArtikelFooter(item, receptuurartikel);
                 items.AppendChild(item);
             }
@@ -351,9 +384,53 @@ namespace access2exact
                 items.AppendChild(xmldocument.CreateComment("Eindartikel:" + eindartikel.Code));
                 var item = CreateXmlRootArtikelElement(eindartikel);
                 item = AddXmlSamengesteldArtikel(item, eindartikel);
+                item = AddXmlVrijeveldenArtikel(item, eindartikel);
                 item = AddXmlRootArtikelFooter(item, eindartikel);
                 items.AppendChild(item);
             }
+        }
+
+        private XmlElement AddXmlVrijeveldenArtikel(XmlElement item, Domain.BaseArtikel artikel)
+        {
+
+            var resource = xmldocument.CreateElement("Resource");
+            resource.SetAttribute("code", "witteveen-automatisering.nl");
+            var lastname = xmldocument.CreateElement("LastName");
+            lastname.AppendChild(xmldocument.CreateTextNode("Automatisering"));
+            resource.AppendChild(lastname);
+            var firstname = xmldocument.CreateElement("FirstName");
+            firstname.AppendChild(xmldocument.CreateTextNode("Witteveen"));
+            resource.AppendChild(firstname);
+            resource.AppendChild(firstname);
+            item.AppendChild(resource);
+
+            var freefields = xmldocument.CreateElement("FreeFields");
+            var freetexts = xmldocument.CreateElement("FreeTexts");
+            freefields.AppendChild(freetexts);
+
+            var freedates = xmldocument.CreateElement("FreeDates");
+            freefields.AppendChild(freedates);
+
+            var freenumbers = xmldocument.CreateElement("FreeNumbers");
+            // tht
+            var freenumer2 = xmldocument.CreateElement("FreeNumber");
+            freenumer2.SetAttribute("number", "2");
+            freenumer2.AppendChild(xmldocument.CreateTextNode(Convert.ToString(artikel.HoudbaarheidInDagen)));
+            freenumbers.AppendChild(freenumer2);
+            // aantal in verpakking
+            var freenumer7 = xmldocument.CreateElement("FreeNumber");
+            freenumer7.SetAttribute("number", "7");
+            freenumer7.AppendChild(xmldocument.CreateTextNode(Convert.ToString(artikel.VerkoopAantalNetto)));
+            freenumbers.AppendChild(freenumer7);
+            
+            freefields.AppendChild(freenumbers);
+
+            var freeyesnos = xmldocument.CreateElement("FreeYesNos");
+            freefields.AppendChild(freeyesnos);
+
+            item.AppendChild(freefields);
+
+            return item;
         }
 
         public void WriteData(Domain.ExportData data)
