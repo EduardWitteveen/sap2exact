@@ -30,10 +30,10 @@ namespace access2exact.Domain
         public virtual void Add(BaseArtikel artikel)
         {
             if(artikel.GetType() == typeof(EindArtikel)) {
-                if(EindArtikelen.ContainsKey(artikel.Code)) {
+                if(!EindArtikelen.ContainsKey(artikel.Code)) {
                     EindArtikelen.Add(artikel.Code, (EindArtikel)artikel);
                 }
-                else Console.Out.WriteLine("DUBBELE ENTRY!!! ZOU NIET MOGEN!!!");
+                else Console.Out.WriteLine("DUBBELE ENTRY: " + artikel.Code + " !!! ZOU NIET MOGEN!!!");
             }
             else if(artikel.GetType() == typeof(ReceptuurArtikel)) {
                 if (!ReceptuurArtikelen.ContainsKey(artikel.Code)) ReceptuurArtikelen.Add(artikel.Code, (ReceptuurArtikel)artikel);
