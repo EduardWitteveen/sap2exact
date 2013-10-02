@@ -26,7 +26,6 @@ namespace access2exact
             Console.WriteLine("SAP Connectionstring: " + csb.ConnectionString);
             var sapconnection = new MaxDB.Data.MaxDBConnection(csb.ConnectionString);
 
-
             // read the sap data
             sapconnection.Open();
             var importer = new Database2Domain(sapconnection);
@@ -42,6 +41,12 @@ namespace access2exact
             // read from access
             data = serializer.Load();
             */
+            Console.Out.WriteLine("eindartikelen:" + data.EindArtikelen.Count);
+            Console.Out.WriteLine("recepturen:" + data.ReceptuurArtikelen.Count);
+            Console.Out.WriteLine("verpakkingen:" + data.VerpakkingsArtikelen.Count);
+            Console.Out.WriteLine("grondstoffen:" + data.GrondstofArtikelen.Count);
+            Console.Out.WriteLine("ingredienten:" + data.IngredientArtikelen.Count);
+
             // write the xml
             var exporter = new Domain2Xml();
             exporter.WriteData(data);

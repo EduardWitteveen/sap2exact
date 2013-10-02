@@ -42,7 +42,30 @@ namespace access2exact
             this.sapconnection = sapconnection;
         }
 
-        private DataTable Query(string sql, Dictionary<string, object> parameters = null)
+        private DateTime ConvertSapDate(object value)
+        {
+            var str = Convert.ToString(value);
+            int year = Convert.ToInt32(str.Substring(0, 4));
+            int month =  Convert.ToInt32(str.Substring(4, 2));
+            int day  = Convert.ToInt32(str.Substring(6, 2));            
+            return new DateTime(year,month,day);
+        }
+
+        private DataRow QueryRow(string sql, Dictionary<string, object> parameters = null)
+        {
+            var table = QueryTable(sql, parameters);
+            if (table.Rows.Count > 1)
+            {
+                throw new Exception("found more than 1 record for sql:" + sql);
+            }
+            else if (table.Rows.Count == 0)
+            {
+                return null;
+            }
+            return table.Rows[0];
+        }
+
+        private DataTable QueryTable(string sql, Dictionary<string, object> parameters = null)
         {
             var cmd = new MaxDB.Data.MaxDBCommand(sql, sapconnection);
             cmd.CommandType = System.Data.CommandType.Text;
@@ -78,6 +101,16 @@ namespace access2exact
             var artikelsql = @"
                 -- General Material Data
                 -- http://www.stechno.net/sap-tables.html?view=saptable&id=MARA
+/*
+MARA: General Material Data
+http://www.stechno.net/sap-tables.html?view=saptable&id=MARA
+MKAL: Production Versions of Material
+http://www.stechno.net/sap-tables.html?view=saptable&id=MKAL
+AFPO: Order item
+http://www.stechno.net/sap-tables.html?view=saptable&id=AFPO
+MSEG: Document Segment: Material
+http://www.stechno.net/sap-tables.html?view=saptable&id=MSEG
+*/
                 SELECT 
                     MANDT,
                     MATNR
@@ -85,10 +118,10 @@ namespace access2exact
                 WHERE MARA.MANDT= 100
                 AND  NOT MARA.MATKL = 'VERVALLEN' 
                 AND MARA.MTART = 'FERT'
-                AND MATNR LIKE '33024D09' 
+                AND MATNR LIKE '33024%' 
                 ORDER BY MARA.MATNR
             ";
-            var artikeltable = Query(artikelsql);
+            var artikeltable = QueryTable(artikelsql);
 
             foreach (DataRow artikelrow in artikeltable.Rows)
             {
@@ -115,13 +148,12 @@ namespace access2exact
                 WHERE MARA.MANDT = :mandt
                 AND MARA.MATNR = :matnr
             ";
-            var artikelrow = Query(artikelsql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", matnr } }).Rows[0];
+            var artikelrow = QueryRow(artikelsql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", matnr } });
             var mtart = artikelrow["mtart"].ToString();
             switch (mtart)
             {
                 case "FERT":
-                    var eartikel = new Domain.EindArtikel();
-
+                    artikel = new Domain.EindArtikel();
                     #region artikel belasting
                     var belastingsql = @"
                             -- Tax Classification for Material
@@ -131,40 +163,28 @@ namespace access2exact
                             WHERE MLAN.MANDT = :mandt
                             AND MLAN.MATNR = :matnr
                         ";
-                    var belastingrow = Query(belastingsql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", matnr } }).Rows[0];
+                    var belastingrow = QueryRow(belastingsql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", matnr } });
                     Debug.Assert("NL" == Convert.ToString(belastingrow["aland"]));
                     var taxm1 = Convert.ToInt32(belastingrow["taxm1"]);
-                    eartikel.PrijsBelastingCategorie = taxm1;  //wat betekend wat?
-                    #endregion artikel belasting
-                    
-
-                    #region artikel intrastat
-                    var intrastatsql = @"
-                            -- INTRASTAT Receipt/Dispatch
-                            -- http://www.stechno.net/sap-tables.html?view=saptable&id=VEIAV
-                            SELECT *
-                            FROM VEIAV
-                            WHERE VEIAV.MANDT = :mandt
-                            AND VEIAV.MATNR = :matnr
-                        ";
-                    var intrastatrow = Query(intrastatsql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", matnr } }).Rows[0];
-                    eartikel.Intrastat = Convert.ToString(intrastatrow["BELEGNUMR"]);
-                    #endregion artikel belasting
-
-                    artikel = eartikel;
+                    artikel.PrijsBelastingCategorie = taxm1;  //wat betekend wat?
+                    #endregion artikel belasting                    
                     break;
                 case "HALB":
                     artikel = new Domain.ReceptuurArtikel();
+                    artikel.PrijsBelastingCategorie = 2;
                     break;
                 case "ZROH":
                 case "ROH":
                     artikel = new Domain.GrondstofArtikel();
+                    artikel.PrijsBelastingCategorie = 2;
                     break;
                 case "INGR":
                     artikel = new Domain.IngredientArtikel();
+                    artikel.PrijsBelastingCategorie = 2;
                     break;
                 case "VERP":
                     artikel = new Domain.VerpakkingsArtikel();
+                    artikel.PrijsBelastingCategorie = 4;
                     break;
                 default:
                     string type = Convert.ToString(artikelrow["bom_artikelsoort"]);
@@ -190,7 +210,8 @@ namespace access2exact
                 AND MARM.MEINH = :meins
             ";
             var meins = Convert.ToString(artikelrow["meins"]);
-            var verpakkingrow = Query(verpakkingsql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", matnr }, { ":meins", meins } }).Rows[0];
+            var verpakkingrow = QueryRow(verpakkingsql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", matnr }, { ":meins", meins } });
+            //artikel.VerkoopGewichtEenheid = Convert.ToString(artikelrow["GEWEI"]);
             string verpakkingtype = Convert.ToString(verpakkingrow["MEINH"]);
             if (verpakkingtype == "DS")
             {
@@ -211,13 +232,40 @@ namespace access2exact
             artikel.VerkoopVerpakking  = verpakkingtype;
             artikel.VerkoopAantalNetto = Convert.ToDouble(artikelrow["NTGEW"]);
             artikel.VerkoopAantalBruto = Convert.ToDouble(artikelrow["BRGEW"]);
-            artikel.VerkoopGewichtEenheid = Convert.ToString(artikelrow["GEWEI"]);
+            artikel.HoudbaarheidInDagen = Convert.ToInt32(artikelrow["MHDHB"]);            
 
             //artikel.VerkoopEenheid = Convert.ToString(artikelrow["GEWEI"]);
             //artikel.VerpakkingEenheid = Convert.ToString(verpakkingrow["GEWEI"]);
             //artikel.VerpakkingBruto = Convert.ToDouble(verpakkingrow["BRGEW"]);
             //artikel.VerpakkingNetto = Convert.ToDouble(artikelrow["NTGEW"]);
             #endregion artikel verpakking
+
+            #region artikel intrastat
+            var intrastatsql = @"
+                            -- INTRASTAT Receipt/Dispatch
+                            -- http://www.stechno.net/sap-tables.html?view=saptable&id=VEIAV
+                            SELECT *
+                            FROM VEIAV
+                            WHERE VEIAV.MANDT = :mandt1
+                            AND VEIAV.MATNR = :matnr1
+                            AND (DATUMJAHR * 1000000) + (DATUMMONA * 10000) + (ARRIVDEPA * 100) + LFDNRVEIA  = 
+                            (
+                                SELECT 
+                                    MAX(
+                                        (DATUMJAHR * 1000000) + (DATUMMONA * 10000) + (ARRIVDEPA * 100) + LFDNRVEIA
+                                    )
+                                FROM VEIAV
+                                WHERE VEIAV.MANDT = :mandt2
+                                AND VEIAV.MATNR = :matnr2
+                            )                    
+                        ";
+
+            var intrastatrow = QueryRow(intrastatsql, new Dictionary<string, object>() { { ":mandt1", mandt }, { ":matnr1", matnr }, { ":mandt2", mandt }, { ":matnr2", matnr } });
+            if (intrastatrow != null)
+            {
+                artikel.Intrastat = Convert.ToString(intrastatrow["STATWAREN"]);
+            }
+            #endregion artikel belasting
 
             #region artikel price
             // TODO: speciale subclasse sales article?
@@ -240,15 +288,24 @@ namespace access2exact
                         FROM MBEW
                         WHERE MBEW.MANDT = :mandt
                         AND MBEW.MATNR = :matnr
+                        AND MBEW.BWKEY = :bwkey
                     ";
 
-                var pricerow = Query(pricesql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", matnr } }).Rows[0];
+                var pricerow = QueryRow(pricesql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", matnr }, { ":bwkey", "0001" } });
                 artikel.PrijsKost = Convert.ToDouble(pricerow["stprs"]);
                 // Fix de niet 1 problemen:
                 // TODO: double check!!
                 artikel.PrijsKost = artikel.PrijsKost / artikel.VerkoopAantalNetto;
                 artikel.PrijsVerkoop = 0;
-                artikel.PrijsEenheid = "kg";
+                if (artikel.GetType() == typeof(Domain.VerpakkingsArtikel))
+                {
+                    // verpakkingen in stuks, de rest in kg
+                    artikel.PrijsEenheid = "stuks";
+                }
+                else
+                {
+                    artikel.PrijsEenheid = "kg";
+                }
             }
             #endregion artikel price            
 
@@ -261,7 +318,7 @@ namespace access2exact
                 WHERE MAKT.MANDT = :mandt
                 AND MAKT.MATNR = :matnr
             ";
-            var descriptiontable = Query(descriptionsql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", matnr } });
+            var descriptiontable = QueryTable(descriptionsql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", matnr } });
             foreach (DataRow descriptionrow in descriptiontable.Rows)
             {
                 string taal = Convert.ToString(descriptionrow["spras"]);
@@ -327,6 +384,7 @@ namespace access2exact
                     STKO.STLNR AS STKO_STLNR,
                     STKO.STLAL AS STKO_STLAL,
                     STKO.STKTX AS STKO_STKTX,
+                    STKO.DATUV AS STKO_DATUV,
 
                     STAS.STLTY AS STAS_STLTY,
                     STAS.STLNR AS STAS_STLNR,
@@ -375,7 +433,7 @@ namespace access2exact
                 AND MAST.MATNR =  :matnr
                 ORDER BY MAST_STLAL, STPO_POSNR
             ";
-            var bomtable = Query(bomsql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", artikel.Code } });
+            var bomtable = QueryTable(bomsql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", artikel.Code } });
 
             Domain.Stuklijst stuklijst = null;
             foreach (DataRow bomrow in bomtable.Rows)
@@ -388,6 +446,8 @@ namespace access2exact
                     stuklijst.StuklijstVersion = stuklijstcode;
                     stuklijst.StuklijstNaam = stuklijstnaam;
                     stuklijst.StuklijstTotaalAantal = -1;
+
+                    stuklijst.StuklijstDatum = ConvertSapDate(bomrow["STKO_DATUV"]);
                     artikel.Stuklijsten.Add(stuklijst);
                 }
 

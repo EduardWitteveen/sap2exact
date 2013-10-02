@@ -12,5 +12,6 @@ namespace access2exact.Domain
         public double StuklijstTotaalAantal;
         public List<StuklijstRegel> StuklijstRegels = new List<StuklijstRegel>();
         public string StuklijstNaam;
+        public DateTime StuklijstDatum;
     }
 }
