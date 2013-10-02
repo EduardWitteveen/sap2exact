@@ -12,28 +12,7 @@ namespace access2exact
     public class Database2Domain
     {
         private Domain.ExportData data;
-        /*
-        const string OPVULLING = "SAP________";
-        static string CreateItemCode(string nummer)
-        {
-            while (nummer[0] == '0') nummer = nummer.Substring(1);
-            return OPVULLING.Substring(0, 12 - nummer.Trim().Length - 1) + "_" + nummer.Trim();
-        }
-        static string Truncate(string value, int maxLength)
-        {
-            return value.Length <= maxLength ? value : value.Substring(0, maxLength);
-        }
 
-        static int CreateSeqeuenceNumber(string nummer)
-        {
-            string result = "";
-            foreach (char c in nummer)
-            {
-                if (Char.IsNumber(c)) result += c;
-            }
-            return Int32.Parse(result);
-        }
-        */
         private MaxDB.Data.MaxDBConnection sapconnection;
 
         public Database2Domain(MaxDB.Data.MaxDBConnection sapconnection)
@@ -76,18 +55,6 @@ namespace access2exact
                     cmd.Parameters.Add(key, parameters[key]);
                 }
             }
-            /*
-                    var sapbomcommand = new MaxDB.Data.MaxDBCommand(queries.EmbeddedResource.GetString("queries.stuklijst.sql"), sapconnection);
-                    sapbomcommand.CommandType = System.Data.CommandType.Text;
-                    sapbomcommand.Parameters.Add(new MaxDB.Data.MaxDBParameter(":artikelnummer", artikelcode));
-                    var sapbomadapter = new MaxDB.Data.MaxDBDataAdapter(sapbomcommand);
-                    var sapbomtable = new DataTable();
-                    sapbomadapter.Fill(sapbomtable);
-
-             */
-            //var reader = cmd.ExecuteReader();
-            //var table = new DataTable();
-            //table.Load(reader);
             var adapter = new MaxDB.Data.MaxDBDataAdapter(cmd);
             var table = new DataTable();
             adapter.Fill(table);
@@ -138,7 +105,11 @@ namespace access2exact
                 int totaalregels = artikeltable.Rows.Count;
                 Console.Out.WriteLine("[ " + (int) ((100.0 / totaalregels) * huidigeregel)  + "% ] START:" + matnr);
 
-                data.Add(ReadArtikelData(matdt, matnr, 1));
+                if (data.Retrieve(matnr) == null)
+                {
+                    data.Add(ReadArtikelData(matdt, matnr, 1));
+                }
+                else Console.Error.WriteLine("Eindartikel fout, was al ingeladen: " + matnr);
             }
             return data;
         }
@@ -492,12 +463,17 @@ namespace access2exact
                     var receptuurregel = new Domain.StuklijstRegel();
                     receptuurregel.Volgnummer = Convert.ToInt32(bomrow["stpo_posnr"]);
                     receptuurregel.ReceptuurRegelAantal = Convert.ToDouble(bomrow["stpo_menge"]);
-                    Domain.BaseArtikel childartikel = ReadArtikelData(mandt, matnr, ident + 1);
+
+                    Domain.BaseArtikel childartikel = data.Retrieve(matnr);
+                    if (childartikel == null)
+                    {
+                        childartikel = ReadArtikelData(mandt, matnr, ident + 1);
+                        data.Add(childartikel);
+                    }
                     // geen ingredienten meenemen!
                     if (childartikel.GetType() != typeof(Domain.IngredientArtikel))
                     {
                         receptuurregel.Artikel = childartikel;
-                        data.Add(childartikel);
                         stuklijst.StuklijstRegels.Add(receptuurregel);
                     }
                 }
