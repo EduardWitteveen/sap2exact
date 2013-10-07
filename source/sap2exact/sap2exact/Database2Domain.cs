@@ -491,6 +491,14 @@ namespace access2exact
 //                ORDER BY MAST_STLAL, STPO_POSNR
 //            ";
             var bomsql = @"
+                -- Material to BOM Link
+                -- http://www.stechno.net/sap-tables.html?view=saptable&id=MAST
+                -- BOM Header
+                -- http://www.stechno.net/sap-tables.html?view=saptable&id=STKO
+                -- BOMs - Item Selection
+                -- http://www.stechno.net/sap-tables.html?view=saptable&id=STAS
+                -- BOM item
+                -- http://www.stechno.net/sap-tables.html?view=saptable&id=STPO
                 SELECT
                     MAST.MATNR AS MAST_MATNR,
                     MAST.STLNR AS MAST_STLNR,

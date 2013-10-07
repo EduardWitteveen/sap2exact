@@ -29,12 +29,14 @@ namespace access2exact
             // read the sap data
             sapconnection.Open();
             var importer = new Database2Domain(sapconnection);
-            var data = importer.ReadEindArtikelData();
+            //var data = importer.ReadEindArtikelData();
             //var data = importer.ReadEindArtikelData("81110X99");
             //var data = importer.ReadEindArtikelData("31010X99");
             //var data = importer.ReadEindArtikelData("23035X99");
             //var data = importer.ReadEindArtikelData("33035X99");    
             //var data = importer.ReadEindArtikelData("81100Z11");    
+            //var data = importer.ReadEindArtikelData("95818Z10");
+            var data = importer.ReadEindArtikelData("01049Z10");            
 
             sapconnection.Close();
 
