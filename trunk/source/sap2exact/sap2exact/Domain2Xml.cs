@@ -16,7 +16,7 @@ namespace access2exact
         const string OPVULLING = "SAP_______";
         static string CreateSapCode(string nummer)
         {
-            while (nummer[0] == '0') nummer = nummer.Substring(1);
+            //while (nummer[0] == '0') nummer = nummer.Substring(1);
             return OPVULLING.Substring(0, 12 - nummer.Trim().Length) + nummer.Trim();
         }
 
@@ -231,8 +231,15 @@ namespace access2exact
                     bom.SetAttribute("versionnumber", Convert.ToString(stuklijst.StuklijstVersion));
 
                     var description = xmldocument.CreateElement("Description");
-                    var stuklijstnaam = stuklijst.StuklijstNaam.Substring(0,30);
-                    if (stuklijstnaam.Length == 0) stuklijstnaam = "Standaard";
+                    var stuklijstnaam = stuklijst.StuklijstNaam;
+                    if (stuklijstnaam.Length == 0)
+                    {
+                        stuklijstnaam = "Standaard";
+                    }
+                    else if (stuklijstnaam.Length > 30)
+                    {
+                        stuklijstnaam = stuklijstnaam.Substring(0, 30);
+                    }
                     description.AppendChild(xmldocument.CreateTextNode(stuklijstnaam));
                     bom.AppendChild(description);
 
