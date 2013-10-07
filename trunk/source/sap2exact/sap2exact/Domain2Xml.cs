@@ -69,7 +69,9 @@ namespace access2exact
             ////////////////////////////////////////////////////////            
             var availability = xmldocument.CreateElement("Availability");
             var datestart = xmldocument.CreateElement("DateStart");
-            datestart.AppendChild(xmldocument.CreateTextNode(artikel.TimeStamp));
+            datestart.AppendChild(xmldocument.CreateTextNode(
+                        String.Format("{0:yyyy-MM-dd}", artikel.TimeStamp)
+                        ));
             availability.AppendChild(datestart);
             item.AppendChild(availability);
             
@@ -218,57 +220,60 @@ namespace access2exact
                 item.AppendChild(statistical);
             }
 
-            // boms
-            var boms = xmldocument.CreateElement("BOMs");
+            if(artikel.Stuklijsten.Count > 0) {
+                // boms
+                var boms = xmldocument.CreateElement("BOMs");
 
-            foreach(Domain.Stuklijst stuklijst in artikel.Stuklijsten) {
-                var bom = xmldocument.CreateElement("BOM");
-                bom.SetAttribute("code", CreateSapCode(artikel.Code));
-                bom.SetAttribute("versionnumber", Convert.ToString(stuklijst.StuklijstVersion));
-
-                var description = xmldocument.CreateElement("Description");
-                var stuklijstnaam = stuklijst.StuklijstNaam;
-                if (stuklijstnaam.Length == 0) stuklijstnaam = "Standaard";
-                description.AppendChild(xmldocument.CreateTextNode(stuklijstnaam));
-                bom.AppendChild(description);
-
-                var effectivedate  = xmldocument.CreateElement("EffectiveDate");
-                effectivedate.AppendChild(xmldocument.CreateTextNode(
-                    String.Format("{0:yyyy-MM-dd}", stuklijst.StuklijstDatum)
-                    ));
-                bom.AppendChild(effectivedate);
-
-                var quantity = xmldocument.CreateElement("Quantity");
-                quantity.AppendChild(xmldocument.CreateTextNode(stuklijst.StuklijstTotaalAantal.ToString()));
-                bom.AppendChild(quantity);
-
-                foreach (Domain.StuklijstRegel receptuurregel in stuklijst.StuklijstRegels)
+                foreach (Domain.Stuklijst stuklijst in artikel.Stuklijsten)
                 {
-                    var bomline = xmldocument.CreateElement("BOMLine");
-                    bomline.SetAttribute("type", "I");
-                    bomline.SetAttribute("sequencenumber", receptuurregel.Volgnummer.ToString());
-                    var bomitem = xmldocument.CreateElement("Item");
-                    bomitem.SetAttribute("code", CreateSapCode(receptuurregel.Artikel.Code));
-                    var bomdescription = xmldocument.CreateElement("Description");
+                    var bom = xmldocument.CreateElement("BOM");
+                    bom.SetAttribute("code", CreateSapCode(artikel.Code));
+                    bom.SetAttribute("versionnumber", Convert.ToString(stuklijst.StuklijstVersion));
 
-                    bomdescription.AppendChild(xmldocument.CreateTextNode(receptuurregel.Artikel.Description));
-                    bomitem.AppendChild(bomdescription);
-                    bomline.AppendChild(bomitem);
+                    var description = xmldocument.CreateElement("Description");
+                    var stuklijstnaam = stuklijst.StuklijstNaam;
+                    if (stuklijstnaam.Length == 0) stuklijstnaam = "Standaard";
+                    description.AppendChild(xmldocument.CreateTextNode(stuklijstnaam));
+                    bom.AppendChild(description);
 
-                    var backflush = xmldocument.CreateElement("BackFlush");
-                    backflush.AppendChild(xmldocument.CreateTextNode("0"));
-                    bomline.AppendChild(backflush);
+                    var effectivedate = xmldocument.CreateElement("EffectiveDate");
+                    effectivedate.AppendChild(xmldocument.CreateTextNode(
+                        String.Format("{0:yyyy-MM-dd}", stuklijst.StuklijstDatum)
+                        ));
+                    bom.AppendChild(effectivedate);
 
-                    var bomquantity = xmldocument.CreateElement("Quantity");
-                    bomquantity.AppendChild(xmldocument.CreateTextNode(receptuurregel.ReceptuurRegelAantal.ToString()));
-                    bomline.AppendChild(bomquantity);
+                    var quantity = xmldocument.CreateElement("Quantity");
+                    quantity.AppendChild(xmldocument.CreateTextNode(stuklijst.StuklijstTotaalAantal.ToString()));
+                    bom.AppendChild(quantity);
 
-                    bom.AppendChild(bomline);
+                    foreach (Domain.StuklijstRegel receptuurregel in stuklijst.StuklijstRegels)
+                    {
+                        var bomline = xmldocument.CreateElement("BOMLine");
+                        bomline.SetAttribute("type", "I");
+                        bomline.SetAttribute("sequencenumber", receptuurregel.Volgnummer.ToString());
+                        var bomitem = xmldocument.CreateElement("Item");
+                        bomitem.SetAttribute("code", CreateSapCode(receptuurregel.Artikel.Code));
+                        var bomdescription = xmldocument.CreateElement("Description");
+
+                        bomdescription.AppendChild(xmldocument.CreateTextNode(receptuurregel.Artikel.Description));
+                        bomitem.AppendChild(bomdescription);
+                        bomline.AppendChild(bomitem);
+
+                        var backflush = xmldocument.CreateElement("BackFlush");
+                        backflush.AppendChild(xmldocument.CreateTextNode("0"));
+                        bomline.AppendChild(backflush);
+
+                        var bomquantity = xmldocument.CreateElement("Quantity");
+                        bomquantity.AppendChild(xmldocument.CreateTextNode(receptuurregel.ReceptuurRegelAantal.ToString()));
+                        bomline.AppendChild(bomquantity);
+
+                        bom.AppendChild(bomline);
+                    }
+
+                    boms.AppendChild(bom);
+                    item.AppendChild(boms);
                 }
-
-                boms.AppendChild(bom);
             }
-            item.AppendChild(boms);
             return item;
         }
 
