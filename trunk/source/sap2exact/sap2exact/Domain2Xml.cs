@@ -231,7 +231,7 @@ namespace access2exact
                     bom.SetAttribute("versionnumber", Convert.ToString(stuklijst.StuklijstVersion));
 
                     var description = xmldocument.CreateElement("Description");
-                    var stuklijstnaam = stuklijst.StuklijstNaam;
+                    var stuklijstnaam = stuklijst.StuklijstNaam.Substring(0,30);
                     if (stuklijstnaam.Length == 0) stuklijstnaam = "Standaard";
                     description.AppendChild(xmldocument.CreateTextNode(stuklijstnaam));
                     bom.AppendChild(description);

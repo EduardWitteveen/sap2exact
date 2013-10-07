@@ -33,7 +33,8 @@ namespace access2exact
             //var data = importer.ReadEindArtikelData("81110X99");
             //var data = importer.ReadEindArtikelData("31010X99");
             //var data = importer.ReadEindArtikelData("23035X99");
-            //var data = importer.ReadEindArtikelData("33035X99");            
+            //var data = importer.ReadEindArtikelData("33035X99");    
+            //var data = importer.ReadEindArtikelData("81100Z11");    
 
             sapconnection.Close();
 
