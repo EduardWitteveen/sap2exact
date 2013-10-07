@@ -41,41 +41,42 @@ namespace access2exact.Domain
         public virtual void Add(BaseArtikel artikel)
         {
             if(artikel.GetType() == typeof(EindArtikel)) {
-                if(EindArtikelen.ContainsKey(artikel.Code)) {
+                //if(EindArtikelen.ContainsKey(artikel.Code)) {
                     EindArtikelen.Add(artikel.Code, (EindArtikel)artikel);
-                    artikelen.Add(artikel.Code, artikel);
-                }
+                //   artikelen.Add(artikel.Code, artikel);
+                //}
             }
             else if(artikel.GetType() == typeof(ReceptuurArtikel)) {
-                if (!ReceptuurArtikelen.ContainsKey(artikel.Code))
-                {
+                //if (!ReceptuurArtikelen.ContainsKey(artikel.Code))
+                //{
                     ReceptuurArtikelen.Add(artikel.Code, (ReceptuurArtikel)artikel);
-                    artikelen.Add(artikel.Code, artikel);
-                }
+                //    artikelen.Add(artikel.Code, artikel);
+                //}
             }
             else if(artikel.GetType() == typeof(VerpakkingsArtikel)) {
-                if (!VerpakkingsArtikelen.ContainsKey(artikel.Code))
-                {
+                //if (!VerpakkingsArtikelen.ContainsKey(artikel.Code))
+                //{
                     VerpakkingsArtikelen.Add(artikel.Code, (VerpakkingsArtikel)artikel);
-                    artikelen.Add(artikel.Code, artikel);
-                }
+                //    artikelen.Add(artikel.Code, artikel);
+                //}
             }
             else if(artikel.GetType() == typeof(GrondstofArtikel)) {
-                if (!GrondstofArtikelen.ContainsKey(artikel.Code))
-                {
+                //if (!GrondstofArtikelen.ContainsKey(artikel.Code))
+                //{
                     GrondstofArtikelen.Add(artikel.Code, (GrondstofArtikel)artikel);
-                    artikelen.Add(artikel.Code, artikel);
-                }
+                // artikelen.Add(artikel.Code, artikel);
+                //}
             }
             else if (artikel.GetType() == typeof(IngredientArtikel))
             {
-                if (!IngredientArtikelen.ContainsKey(artikel.Code))
-                {
+                //if (!IngredientArtikelen.ContainsKey(artikel.Code))
+                //{
                     IngredientArtikelen.Add(artikel.Code, (IngredientArtikel)artikel);
-                    artikelen.Add(artikel.Code, artikel);
-                }
+                // artikelen.Add(artikel.Code, artikel);
+                //}
             }
             else throw new NotImplementedException("unknown type: " + artikel.GetType().FullName);
+            artikelen.Add(artikel.Code, artikel);
         }
     }
 }

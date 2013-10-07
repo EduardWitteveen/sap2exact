@@ -29,7 +29,12 @@ namespace access2exact
             // read the sap data
             sapconnection.Open();
             var importer = new Database2Domain(sapconnection);
-            var data = importer.ReadAllArtikelData();
+            var data = importer.ReadEindArtikelData();
+            //var data = importer.ReadEindArtikelData("81110X99");
+            //var data = importer.ReadEindArtikelData("31010X99");
+            //var data = importer.ReadEindArtikelData("23035X99");
+            //var data = importer.ReadEindArtikelData("33035X99");            
+
             sapconnection.Close();
 
             /*
@@ -51,6 +56,7 @@ namespace access2exact
             var exporter = new Domain2Xml();
             exporter.WriteData(data);
 
+            Console.In.Read();
         }
     }
 }

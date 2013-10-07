@@ -32,9 +32,9 @@ namespace access2exact.Domain
 
         public int PrijsBelastingCategorie;
 
-        public int HoudbaarheidInDagen = 234;
+        public int HoudbaarheidInDagen;
 
-        public string TimeStamp;
+        public DateTime TimeStamp;
 
         public string Intrastat;
     }
