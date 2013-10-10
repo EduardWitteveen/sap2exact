@@ -36,7 +36,17 @@ namespace access2exact
             //var data = importer.ReadEindArtikelData("33035X99");    
             //var data = importer.ReadEindArtikelData("81100Z11");    
             //var data = importer.ReadEindArtikelData("95818Z10");
-            var data = importer.ReadEindArtikelData("01049Z10");            
+    
+            /*
+            importer.Export2Excel(@"C:\exact importeren artikelen\export\mara", "SELECT * FROM MARA");
+            importer.Export2Excel(@"C:\exact importeren artikelen\export\makt", "SELECT * FROM MAKT");
+            importer.Export2Excel(@"C:\exact importeren artikelen\export\mast", "SELECT * FROM MAST");
+            importer.Export2Excel(@"C:\exact importeren artikelen\export\stko", "SELECT * FROM STKO");
+            importer.Export2Excel(@"C:\exact importeren artikelen\export\stas", "SELECT * FROM STAS");
+            importer.Export2Excel(@"C:\exact importeren artikelen\export\stpo", "SELECT * FROM STPO");
+            */
+            // var data = importer.ReadEindArtikelData("01049Z10");
+            var data = importer.ReadEindArtikelData();
 
             sapconnection.Close();
 

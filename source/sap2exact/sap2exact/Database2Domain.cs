@@ -67,7 +67,7 @@ namespace access2exact
             return table;
         }
 
-        private  void Export2Excel(string name, string sql, Dictionary<string, object> parameters = null)
+        public void Export2Excel(string name, string sql, Dictionary<string, object> parameters = null)
         {
             Console.WriteLine("Exporting: " + name + "\n\t" + sql);
 
@@ -490,74 +490,114 @@ namespace access2exact
 //                AND MAST.MATNR =  :matnr
 //                ORDER BY MAST_STLAL, STPO_POSNR
 //            ";
+//            var bomsql = @"
+//                -- Material to BOM Link
+//                -- http://www.stechno.net/sap-tables.html?view=saptable&id=MAST
+//                -- BOM Header
+//                -- http://www.stechno.net/sap-tables.html?view=saptable&id=STKO
+//                -- BOMs - Item Selection
+//                -- http://www.stechno.net/sap-tables.html?view=saptable&id=STAS
+//                -- BOM item
+//                -- http://www.stechno.net/sap-tables.html?view=saptable&id=STPO
+//                SELECT
+//                    MAST.MATNR AS MAST_MATNR,
+//                    MAST.STLNR AS MAST_STLNR,
+//                    MAST.STLAL AS MAST_STLAL,    -- Alternative BOM
+//
+//                    STKO.STLTY AS STKO_STLTY,
+//                    STKO.STLNR AS STKO_STLNR,
+//                    STKO.STLAL AS STKO_STLAL,
+//                    STKO.STKTX AS STKO_STKTX,
+//                    STKO.DATUV AS STKO_DATUV,
+//                    STKO.BMENG AS STKO_BMENG,
+//                    
+//                    STAS.STLTY AS STAS_STLTY,
+//                    STAS.STLNR AS STAS_STLNR,
+//                    STAS.STLKN    AS STAS_STLKN,
+//                        
+//                    STPO.IDNRK AS STPO_IDNRK,
+//                    STPO.POSNR AS STPO_POSNR,
+//                    STPO.MENGE AS STPO_MENGE
+//                FROM MAST
+//                INNER JOIN STKO
+//	                ON STKO.LKENZ = ''
+//	                AND STKO.LOEKZ = ''
+// 	                AND STKO.MANDT = MAST.MANDT 
+//	                AND STKO.STLNR = MAST.STLNR
+//	                AND STKO.STLAL = MAST.STLAL
+//	                AND STKO.STKOZ NOT IN 
+//	                (
+//		                /* ALLEEN DE LAATSTE! */
+//		                SELECT vorige_stko.VGKZL
+//		                FROM STKO vorige_stko
+//		                WHERE vorige_stko.STLNR = MAST.STLNR
+//		                AND vorige_stko.STLAL = MAST.STLAL                    
+//	                )
+//                 INNER JOIN STAS
+//                    ON STAS.LKENZ = ''
+//                    AND STAS.MANDT = STKO.MANDT 
+//                    AND STAS.STLTY =STKO.STLTY
+//                    AND STAS.STLNR = STKO.STLNR
+//                    AND STAS.STLAL = STKO.STLAL
+//                INNER JOIN STPO
+//	                ON  STPO.LKENZ = ''
+// 	                AND STPO.MANDT = STAS.MANDT 
+//	                AND STPO.STLTY = STAS.STLTY
+//	                AND STPO.STLNR = STAS.STLNR
+//	                AND STPO.STLKN = STAS.STLKN                 
+//	                AND STPO.STPOZ NOT IN 
+//	                (
+//		                /* ALLEEN DE LAATSTE! */
+//		                SELECT vorige_stpo.VGPZL
+//		                FROM STPO vorige_stpo
+//		                WHERE vorige_stpo.STLTY = STKO.STLTY
+//		                AND vorige_stpo.STLNR = STKO.STLNR
+//	                )    
+//                WHERE MAST.MANDT = :mandt
+//                AND MAST.MATNR =  :matnr
+//                AND STPO.AEDAT = '00000000'
+//                ORDER BY MAST_STLAL, STPO_POSNR
+//            ";
             var bomsql = @"
-                -- Material to BOM Link
-                -- http://www.stechno.net/sap-tables.html?view=saptable&id=MAST
-                -- BOM Header
-                -- http://www.stechno.net/sap-tables.html?view=saptable&id=STKO
-                -- BOMs - Item Selection
-                -- http://www.stechno.net/sap-tables.html?view=saptable&id=STAS
-                -- BOM item
-                -- http://www.stechno.net/sap-tables.html?view=saptable&id=STPO
-                SELECT
-                    MAST.MATNR AS MAST_MATNR,
-                    MAST.STLNR AS MAST_STLNR,
-                    MAST.STLAL AS MAST_STLAL,    -- Alternative BOM
-
-                    STKO.STLTY AS STKO_STLTY,
-                    STKO.STLNR AS STKO_STLNR,
-                    STKO.STLAL AS STKO_STLAL,
-                    STKO.STKTX AS STKO_STKTX,
-                    STKO.DATUV AS STKO_DATUV,
-                    STKO.BMENG AS STKO_BMENG,
-                    
-                    STAS.STLTY AS STAS_STLTY,
-                    STAS.STLNR AS STAS_STLNR,
-                    STAS.STLKN    AS STAS_STLKN,
-                        
-                    STPO.IDNRK AS STPO_IDNRK,
-                    STPO.POSNR AS STPO_POSNR,
-                    STPO.MENGE AS STPO_MENGE
-                FROM MAST
-                INNER JOIN STKO
-	                ON STKO.LKENZ = ''
-	                AND STKO.LOEKZ = ''
- 	                AND STKO.MANDT = MAST.MANDT 
-	                AND STKO.STLNR = MAST.STLNR
-	                AND STKO.STLAL = MAST.STLAL
-	                AND STKO.STKOZ NOT IN 
-	                (
-		                /* ALLEEN DE LAATSTE! */
-		                SELECT vorige_stko.VGKZL
-		                FROM STKO vorige_stko
-		                WHERE vorige_stko.STLNR = MAST.STLNR
-		                AND vorige_stko.STLAL = MAST.STLAL                    
-	                )
-                 INNER JOIN STAS
-                    ON STAS.LKENZ = ''
-                    AND STAS.MANDT = STKO.MANDT 
-                    AND STAS.STLTY =STKO.STLTY
-                    AND STAS.STLNR = STKO.STLNR
-                    AND STAS.STLAL = STKO.STLAL
-                INNER JOIN STPO
-	                ON  STPO.LKENZ = ''
- 	                AND STPO.MANDT = STAS.MANDT 
-	                AND STPO.STLTY = STAS.STLTY
-	                AND STPO.STLNR = STAS.STLNR
-	                AND STPO.STLKN = STAS.STLKN                 
-	                AND STPO.STPOZ NOT IN 
-	                (
-		                /* ALLEEN DE LAATSTE! */
-		                SELECT vorige_stpo.VGPZL
-		                FROM STPO vorige_stpo
-		                WHERE vorige_stpo.STLTY = STKO.STLTY
-		                AND vorige_stpo.STLNR = STKO.STLNR
-	                )    
-                WHERE MAST.MANDT = :mandt
-                AND MAST.MATNR =  :matnr
-                AND STPO.AEDAT = '00000000'
-                ORDER BY MAST_STLAL, STPO_POSNR
+            SELECT 
+                ZOEK.STLAN AS MAST_STLAN,
+                ZOEK.STLAL AS MAST_STLAL,
+                STKO.STKTX AS STKO_STKTX,
+                STKO.DATUV AS STKO_DATUV,
+                STKO.BMENG AS STKO_BMENG,
+                STPO.*
+            FROM STPO
+            JOIN 
+            (
+                SELECT DISTINCT
+                    Z_MAST.MANDT,
+                    Z_MAST.STLAN,
+                    Z_MAST.STLNR,
+                    Z_MAST.STLAL,
+                    Z_STPO.POSNR,        
+                    MAX(Z_STPO.STPOZ) AS STPOZ
+                FROM MAST Z_MAST
+                JOIN STPO Z_STPO
+                    ON Z_STPO.MANDT = Z_MAST.MANDT 
+                    AND Z_STPO.STLNR= Z_MAST.STLNR
+                    AND Z_STPO.LKENZ = ''
+                WHERE Z_MAST.MANDT= :mandt
+                AND Z_MAST.WERKS= '0001'
+                AND Z_MAST.MATNR = :matnr
+                GROUP BY Z_MAST.MANDT, Z_MAST.STLAN, Z_MAST.STLNR, Z_MAST.STLAL, Z_STPO.POSNR
+            ) ZOEK
+                ON ZOEK.MANDT = STPO.MANDT
+                AND ZOEK.STLNR = STPO.STLNR
+                AND ZOEK.STPOZ = STPO.STPOZ 
+            LEFT OUTER JOIN STKO 
+                ON STKO.MANDT  = ZOEK.MANDT	
+                AND STKO.STLNR = ZOEK.STLNR
+                AND STKO.LKENZ = ''
+                AND STKO.LOEKZ = ''    
+            ORDER BY STPO.POSNR
             ";
+
+
 //            Export2Excel(@"C:\exact importeren artikelen\export\stuklijst-" + artikel.Code + ".xls", bomsql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", artikel.Code } });
             var bomtable = QueryTable(bomsql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", artikel.Code } });
 
@@ -581,11 +621,11 @@ namespace access2exact
                     stuklijst.StuklijstTotaalAantal = Convert.ToDouble(bomrow["STKO_BMENG"]);
                 }
 
-                string matnr = Convert.ToString(bomrow["stpo_idnrk"]);
+                string matnr = Convert.ToString(bomrow["idnrk"]);
                 if (matnr.Length > 0)
                 {                    
                     var receptuurregel = new Domain.StuklijstRegel();
-                    var posnr = Convert.ToString(bomrow["stpo_posnr"]);
+                    var posnr = Convert.ToString(bomrow["posnr"]);
                     if (!Int32.TryParse(posnr, out receptuurregel.Volgnummer)) {
                         int found = 0;
                         foreach(char c in posnr.ToCharArray()) {
@@ -596,7 +636,7 @@ namespace access2exact
                         }
                         Console.Error.WriteLine("invalid pos-nr in arikel:" + artikel.Code + " value: " + posnr + " assuming:" + found);
                     }
-                    receptuurregel.ReceptuurRegelAantal = Convert.ToDouble(bomrow["stpo_menge"]);
+                    receptuurregel.ReceptuurRegelAantal = Convert.ToDouble(bomrow["menge"]);
 
                     Domain.BaseArtikel childartikel = data.Retrieve(matnr);
                     if (childartikel == null)
