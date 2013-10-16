@@ -558,47 +558,123 @@ namespace access2exact
 //                AND STPO.AEDAT = '00000000'
 //                ORDER BY MAST_STLAL, STPO_POSNR
 //            ";
+//            var bomsql = @"
+//SELECT 
+//    MAST.STLAN AS MAST_STLAN,
+//    MAST.STLAL AS MAST_STLAL,
+//    STKO.STKTX AS STKO_STKTX,
+//    STKO.DATUV AS STKO_DATUV,
+//    STKO.BMENG AS STKO_BMENG,
+//    STPO.*
+//FROM MAST
+//JOIN STKO 
+//    ON STKO.MANDT  = MAST.MANDT
+//    AND STKO.STLNR = MAST.STLNR
+//    AND STKO.STLAL = MAST.STLAL
+//    AND STKO.LKENZ = ''
+//    AND STKO.LOEKZ = ''
+//    AND NOT STKO.STKOZ  IN
+//    (
+//        SELECT PREV_STKO.VGKZL
+//        FROM STKO PREV_STKO
+//        WHERE PREV_STKO.MANDT = MAST.MANDT 
+//        AND PREV_STKO.STLNR= MAST.STLNR        
+//    )
+//JOIN STAS
+//    ON STAS.MANDT  = MAST.MANDT
+//    AND STAS.STLNR = MAST.STLNR
+//    AND STAS.STLAL = MAST.STLAL
+//JOIN STPO
+//    ON STPO.MANDT = MAST.MANDT 
+//    AND STPO.STLNR= MAST.STLNR
+//    AND STPO.STLKN = STAS.STLKN
+//    AND STPO.LKENZ = ''
+//    AND NOT STPO.STPOZ IN
+//    (
+//        SELECT PREV_STPO.VGPZL
+//        FROM STPO PREV_STPO
+//        WHERE PREV_STPO.MANDT = MAST.MANDT 
+//        AND PREV_STPO.STLNR= MAST.STLNR        
+//    )
+//WHERE MAST.MANDT= :mandt
+//AND MAST.WERKS= '0001'
+//AND MAST.MATNR = :matnr
+//ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR
+//            ";
             var bomsql = @"
-            SELECT 
-                ZOEK.STLAN AS MAST_STLAN,
-                ZOEK.STLAL AS MAST_STLAL,
-                STKO.STKTX AS STKO_STKTX,
-                STKO.DATUV AS STKO_DATUV,
-                STKO.BMENG AS STKO_BMENG,
-                STPO.*
-            FROM STPO
-            JOIN 
-            (
-                SELECT DISTINCT
-                    Z_MAST.MANDT,
-                    Z_MAST.STLAN,
-                    Z_MAST.STLNR,
-                    Z_MAST.STLAL,
-                    Z_STPO.POSNR,        
-                    MAX(Z_STPO.STPOZ) AS STPOZ
-                FROM MAST Z_MAST
-                JOIN STPO Z_STPO
-                    ON Z_STPO.MANDT = Z_MAST.MANDT 
-                    AND Z_STPO.STLNR= Z_MAST.STLNR
-                    AND Z_STPO.LKENZ = ''
-                WHERE Z_MAST.MANDT= :mandt
-                AND Z_MAST.WERKS= '0001'
-                AND Z_MAST.MATNR = :matnr
-                GROUP BY Z_MAST.MANDT, Z_MAST.STLAN, Z_MAST.STLNR, Z_MAST.STLAL, Z_STPO.POSNR
-            ) ZOEK
-                ON ZOEK.MANDT = STPO.MANDT
-                AND ZOEK.STLNR = STPO.STLNR
-                AND ZOEK.STPOZ = STPO.STPOZ 
-            LEFT OUTER JOIN STKO 
-                ON STKO.MANDT  = ZOEK.MANDT	
-                AND STKO.STLNR = ZOEK.STLNR
-                AND STKO.LKENZ = ''
-                AND STKO.LOEKZ = ''    
-            ORDER BY STPO.POSNR
+SELECT 
+    MAST.STLAN AS MAST_STLAN,
+    MAST.STLAL AS MAST_STLAL,
+    MAST.STLNR AS MAST_STLNR,
+    STKO.STKTX AS STKO_STKTX,
+    STKO.DATUV AS STKO_DATUV,
+    STKO.BMENG AS STKO_BMENG,
+    STAS.AEDAT AS STAS_AEDAT,
+    STPO.AEDAT AS STPO_AEDAT,
+    STPO.MENGE AS STPO_MENGE,
+    STPO.POSNR AS STPO_POSNR,
+    STPO.IDNRK AS STPO_IDNRK
+FROM MAST
+JOIN STKO 
+    ON STKO.MANDT  = MAST.MANDT
+    AND STKO.STLNR = MAST.STLNR
+    AND STKO.STLAL = MAST.STLAL
+    AND STKO.LKENZ = ''
+    AND STKO.LOEKZ = ''
+    AND NOT STKO.STKOZ  IN
+    (
+        SELECT PREV_STKO.VGKZL
+        FROM STKO PREV_STKO
+        WHERE PREV_STKO.MANDT = MAST.MANDT 
+        AND PREV_STKO.STLNR= MAST.STLNR        
+    )
+JOIN STAS
+    ON STAS.MANDT = MAST.MANDT
+    AND STAS.STLNR= MAST.STLNR
+    AND STAS.STLAL = MAST.STLAL
+    AND STAS.LKENZ = ''
+JOIN STPO
+    ON STPO.MANDT = MAST.MANDT 
+    AND STPO.STLNR= MAST.STLNR
+    AND STPO.LKENZ = ''
+    AND NOT STPO.STPOZ IN
+    (
+        SELECT PREV_STPO.VGPZL
+        FROM STPO PREV_STPO
+        WHERE PREV_STPO.MANDT = MAST.MANDT 
+        AND PREV_STPO.STLNR= MAST.STLNR        
+    )
+    AND  STPO.STLKN = STAS.STLKN
+    AND  
+    (
+        STPO.AEDAT = '00000000'
+        OR '00000000' NOT IN 
+        (
+            SELECT AEDAT_STPO.AEDAT
+            FROM STPO AEDAT_STPO
+            WHERE AEDAT_STPO.MANDT = MAST.MANDT 
+            AND AEDAT_STPO.STLNR= MAST.STLNR                
+        ) 
+    )
+WHERE MAST.MANDT= :mandt
+AND MAST.WERKS= '0001'
+AND MAST.MATNR = :matnr
+ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR
             ";
 
 
-//            Export2Excel(@"C:\exact importeren artikelen\export\stuklijst-" + artikel.Code + ".xls", bomsql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", artikel.Code } });
+            /*
+            '01010D15' = 10 t/m 50
+            '33024D13' = 10 t/m 60
+            '33024X99' = 10 t/m 110
+            '42760X99' = 40 t/m 90
+            '81110X99' = 170 t/m 300
+            '42760X99' moet hebben GR226150
+            '01010D15' moet hebben EM15Z610 
+            */
+
+
+            //            Export2Excel(@"C:\exact importeren artikelen\export\stuklijst-" + artikel.Code + ".xls", bomsql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", artikel.Code } });
             var bomtable = QueryTable(bomsql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", artikel.Code } });
 
             Domain.Stuklijst stuklijst = null;
@@ -621,11 +697,11 @@ namespace access2exact
                     stuklijst.StuklijstTotaalAantal = Convert.ToDouble(bomrow["STKO_BMENG"]);
                 }
 
-                string matnr = Convert.ToString(bomrow["idnrk"]);
+                string matnr = Convert.ToString(bomrow["STPO_idnrk"]);
                 if (matnr.Length > 0)
                 {                    
                     var receptuurregel = new Domain.StuklijstRegel();
-                    var posnr = Convert.ToString(bomrow["posnr"]);
+                    var posnr = Convert.ToString(bomrow["STPO_posnr"]);
                     if (!Int32.TryParse(posnr, out receptuurregel.Volgnummer)) {
                         int found = 0;
                         foreach(char c in posnr.ToCharArray()) {
@@ -636,7 +712,7 @@ namespace access2exact
                         }
                         Console.Error.WriteLine("invalid pos-nr in arikel:" + artikel.Code + " value: " + posnr + " assuming:" + found);
                     }
-                    receptuurregel.ReceptuurRegelAantal = Convert.ToDouble(bomrow["menge"]);
+                    receptuurregel.ReceptuurRegelAantal = Convert.ToDouble(bomrow["STPO_menge"]);
 
                     Domain.BaseArtikel childartikel = data.Retrieve(matnr);
                     if (childartikel == null)
@@ -655,7 +731,8 @@ namespace access2exact
                     if (childartikel.GetType() != typeof(Domain.IngredientArtikel))
                     {
                         receptuurregel.Artikel = childartikel;
-                        stuklijst.StuklijstRegels.Add(receptuurregel);
+                        //TODO: HACK HACK NET LINE!!!!
+                        stuklijst.StuklijstRegelsAdd(receptuurregel);
                     }
                 }
             }
