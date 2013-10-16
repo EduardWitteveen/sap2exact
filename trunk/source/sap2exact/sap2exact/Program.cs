@@ -29,7 +29,7 @@ namespace access2exact
             // read the sap data
             sapconnection.Open();
             var importer = new Database2Domain(sapconnection);
-            //var data = importer.ReadEindArtikelData();
+            var data = importer.ReadEindArtikelData();
             //var data = importer.ReadEindArtikelData("81110X99");
             //var data = importer.ReadEindArtikelData("31010X99");
             //var data = importer.ReadEindArtikelData("23035X99");
@@ -45,22 +45,21 @@ namespace access2exact
             importer.Export2Excel(@"C:\exact importeren artikelen\export\stas", "SELECT * FROM STAS");
             importer.Export2Excel(@"C:\exact importeren artikelen\export\stpo", "SELECT * FROM STPO");
             */
+
             // var data = importer.ReadEindArtikelData("01049Z10");
             // var data = importer.ReadEindArtikelData("HF213000");
             // var data = importer.ReadEindArtikelData("64152X99");
-            var data = importer.ReadEindArtikelData();
+            // var data = importer.ReadEindArtikelData("81110X99");
 
             sapconnection.Close();
-
-            /*
-            var data = new Domain.ExportData();
+/*
+            var data = new Domain.ExportData();             
             Hibernator serializer = new Hibernator();
-            
-            // write to access
-            serializer.Save(data);
+            serializer.Save(data);            
             // read from access
             data = serializer.Load();
-            */
+ */ 
+
             Console.Out.WriteLine("eindartikelen:" + data.EindArtikelen.Count);
             Console.Out.WriteLine("recepturen:" + data.ReceptuurArtikelen.Count);
             Console.Out.WriteLine("verpakkingen:" + data.VerpakkingsArtikelen.Count);

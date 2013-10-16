@@ -48,14 +48,8 @@
     <Compile Include="ReceptuurArtikel.cs" />
     <Compile Include="Stuklijst.cs" />
     <Compile Include="StuklijstRegel.cs" />
-    <Compile Include="TestData.cs" />
     <Compile Include="VerpakkingsArtikel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="TestData.hbm.xml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ExportData.hbm.xml">

@@ -8,11 +8,16 @@ namespace access2exact.Domain
 {
     public class Stuklijst
     {
-        public int StuklijstVersion;
-        public double StuklijstTotaalAantal;
-        public List<StuklijstRegel> StuklijstRegels = new List<StuklijstRegel>();
-        public string StuklijstNaam;
-        public DateTime StuklijstDatum;
+        public virtual int StuklijstVersion{ get; set; }
+        public virtual double StuklijstTotaalAantal{ get; set; }
+        public virtual List<StuklijstRegel> StuklijstRegels{ get; set; }
+        public virtual string StuklijstNaam { get; set; }
+        public virtual DateTime StuklijstDatum { get; set; }
+
+        public Stuklijst()
+        {
+            StuklijstRegels = new List<StuklijstRegel>();
+        }
 
         public void StuklijstRegelsAdd(StuklijstRegel receptuurregel)
         {

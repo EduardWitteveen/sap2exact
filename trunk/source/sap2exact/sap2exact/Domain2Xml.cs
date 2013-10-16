@@ -441,9 +441,59 @@ namespace access2exact
 
             var freeyesnos = xmldocument.CreateElement("FreeYesNos");
             freefields.AppendChild(freeyesnos);
-
             item.AppendChild(freefields);
 
+            // class 3
+            string iccode = "30";
+            string icdescription = "Halffabrikaten";
+            if (artikel.GetType() == typeof(Domain.GrondstofArtikel))
+            {
+                iccode = "10";
+                icdescription = "Grondstoffen";
+            }
+            else if (artikel.GetType() == typeof(Domain.VerpakkingsArtikel))
+            {
+                iccode = "20";
+                icdescription = "Verpakkingen";
+            }
+            else if (artikel.GetType() == typeof(Domain.ReceptuurArtikel))
+            {
+                iccode = "30";
+                icdescription = "Halffabrikaten";
+            }
+            else if (artikel.GetType() == typeof(Domain.EindArtikel))
+            {
+                iccode = "40";
+                icdescription = "Gereed Product";
+            }
+            else throw new NotImplementedException("unsupported article type");
+
+            var itemcategory = xmldocument.CreateElement("ItemCategory");
+            itemcategory.SetAttribute("number", "3");
+            itemcategory.SetAttribute("code", iccode);
+            var description = xmldocument.CreateElement("Description");
+            description.AppendChild(xmldocument.CreateTextNode(icdescription));
+            itemcategory.AppendChild(description);
+            item.AppendChild(itemcategory);
+            if (artikel.GetType() == typeof(Domain.EindArtikel))
+            {
+                // class 6
+                itemcategory = xmldocument.CreateElement("ItemCategory");
+                itemcategory.SetAttribute("number", "6");
+                itemcategory.SetAttribute("code", "30");
+                description = xmldocument.CreateElement("Description");
+                description.AppendChild(xmldocument.CreateTextNode("Productie-artikel Vlaardingen"));
+                itemcategory.AppendChild(description);
+                item.AppendChild(itemcategory);
+                // class 7
+                itemcategory = xmldocument.CreateElement("ItemCategory");
+                itemcategory.SetAttribute("number", "7");
+                itemcategory.SetAttribute("code", "BULK");
+                description = xmldocument.CreateElement("Description");
+                description.AppendChild(xmldocument.CreateTextNode("Bulkproduct"));
+                itemcategory.AppendChild(description);
+                item.AppendChild(itemcategory);
+            }
             return item;
         }
 

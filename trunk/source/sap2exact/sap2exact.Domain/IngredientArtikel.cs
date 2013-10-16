@@ -8,5 +8,6 @@ namespace access2exact.Domain
 {
     public class IngredientArtikel: BaseArtikel
     {
+
     }
 }

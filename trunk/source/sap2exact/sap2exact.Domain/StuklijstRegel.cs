@@ -8,8 +8,8 @@ namespace access2exact.Domain
 {
     public class StuklijstRegel
     {
-        public int Volgnummer;
-        public double ReceptuurRegelAantal;
-        public BaseArtikel Artikel;
+        public virtual int Volgnummer { get; set; }
+        public virtual double ReceptuurRegelAantal { get; set; }
+        public virtual BaseArtikel Artikel { get; set; }
     }
 }

@@ -702,8 +702,9 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR
                 {                    
                     var receptuurregel = new Domain.StuklijstRegel();
                     var posnr = Convert.ToString(bomrow["STPO_posnr"]);
-                    if (!Int32.TryParse(posnr, out receptuurregel.Volgnummer)) {
-                        int found = 0;
+                    int found = 0;
+                    if (!Int32.TryParse(posnr, out found))
+                    {
                         foreach(char c in posnr.ToCharArray()) {
                             if(char.IsDigit(c)) {
                                 found = found * 10;
@@ -712,6 +713,7 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR
                         }
                         Console.Error.WriteLine("invalid pos-nr in arikel:" + artikel.Code + " value: " + posnr + " assuming:" + found);
                     }
+                    receptuurregel.Volgnummer = found;
                     receptuurregel.ReceptuurRegelAantal = Convert.ToDouble(bomrow["STPO_menge"]);
 
                     Domain.BaseArtikel childartikel = data.Retrieve(matnr);
