@@ -46,6 +46,8 @@ namespace access2exact
             importer.Export2Excel(@"C:\exact importeren artikelen\export\stpo", "SELECT * FROM STPO");
             */
             // var data = importer.ReadEindArtikelData("01049Z10");
+            // var data = importer.ReadEindArtikelData("HF213000");
+            // var data = importer.ReadEindArtikelData("64152X99");
             var data = importer.ReadEindArtikelData();
 
             sapconnection.Close();

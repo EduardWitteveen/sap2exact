@@ -13,7 +13,7 @@ namespace access2exact
         XmlDocument xmldocument;
         XmlElement items;
 
-        const string OPVULLING = "SAP_______";
+        const string OPVULLING = "T01_______";
         static string CreateSapCode(string nummer)
         {
             //while (nummer[0] == '0') nummer = nummer.Substring(1);
