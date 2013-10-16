@@ -12,7 +12,7 @@ namespace access2exact.Domain
         public virtual Guid Id { get; set; }
 
 
-        private Dictionary<string, Domain.BaseArtikel> artikelen = new Dictionary<string, Domain.BaseArtikel>();
+        public virtual Dictionary<string, Domain.BaseArtikel> AlleArtikelen { get; set; }
 
         public virtual Dictionary<string, Domain.EindArtikel> EindArtikelen { get; set; }
         public virtual Dictionary<string, Domain.ReceptuurArtikel> ReceptuurArtikelen { get; set; }
@@ -22,6 +22,9 @@ namespace access2exact.Domain
 
         public ExportData()
         {
+            Id = Guid.NewGuid();
+
+            AlleArtikelen = new Dictionary<string, Domain.BaseArtikel>();
             EindArtikelen = new Dictionary<string, Domain.EindArtikel>();
             ReceptuurArtikelen = new Dictionary<string, Domain.ReceptuurArtikel>();
             VerpakkingsArtikelen = new Dictionary<string, Domain.VerpakkingsArtikel>();
@@ -29,11 +32,11 @@ namespace access2exact.Domain
             IngredientArtikelen = new Dictionary<string, Domain.IngredientArtikel>();
         }
 
-        public Domain.BaseArtikel Retrieve(String artikelcode)
+        public virtual Domain.BaseArtikel Retrieve(String artikelcode)
         {
-            if (artikelen.ContainsKey(artikelcode))
+            if (AlleArtikelen.ContainsKey(artikelcode))
             {
-                return artikelen[artikelcode];
+                return AlleArtikelen[artikelcode];
             }
             return null;
         }
@@ -41,42 +44,24 @@ namespace access2exact.Domain
         public virtual void Add(BaseArtikel artikel)
         {
             if(artikel.GetType() == typeof(EindArtikel)) {
-                //if(EindArtikelen.ContainsKey(artikel.Code)) {
-                    EindArtikelen.Add(artikel.Code, (EindArtikel)artikel);
-                //   artikelen.Add(artikel.Code, artikel);
-                //}
+                EindArtikelen.Add(artikel.Code, (EindArtikel)artikel);
             }
             else if(artikel.GetType() == typeof(ReceptuurArtikel)) {
-                //if (!ReceptuurArtikelen.ContainsKey(artikel.Code))
-                //{
-                    ReceptuurArtikelen.Add(artikel.Code, (ReceptuurArtikel)artikel);
-                //    artikelen.Add(artikel.Code, artikel);
-                //}
+                ReceptuurArtikelen.Add(artikel.Code, (ReceptuurArtikel)artikel);
             }
             else if(artikel.GetType() == typeof(VerpakkingsArtikel)) {
-                //if (!VerpakkingsArtikelen.ContainsKey(artikel.Code))
-                //{
-                    VerpakkingsArtikelen.Add(artikel.Code, (VerpakkingsArtikel)artikel);
-                //    artikelen.Add(artikel.Code, artikel);
-                //}
+                VerpakkingsArtikelen.Add(artikel.Code, (VerpakkingsArtikel)artikel);
             }
             else if(artikel.GetType() == typeof(GrondstofArtikel)) {
-                //if (!GrondstofArtikelen.ContainsKey(artikel.Code))
-                //{
-                    GrondstofArtikelen.Add(artikel.Code, (GrondstofArtikel)artikel);
-                // artikelen.Add(artikel.Code, artikel);
-                //}
+                GrondstofArtikelen.Add(artikel.Code, (GrondstofArtikel)artikel);
             }
             else if (artikel.GetType() == typeof(IngredientArtikel))
             {
-                //if (!IngredientArtikelen.ContainsKey(artikel.Code))
-                //{
-                    IngredientArtikelen.Add(artikel.Code, (IngredientArtikel)artikel);
-                // artikelen.Add(artikel.Code, artikel);
-                //}
+                IngredientArtikelen.Add(artikel.Code, (IngredientArtikel)artikel);
+
             }
             else throw new NotImplementedException("unknown type: " + artikel.GetType().FullName);
-            artikelen.Add(artikel.Code, artikel);
+            AlleArtikelen.Add(artikel.Code, artikel);
         }
     }
 }

@@ -7,5 +7,6 @@ namespace access2exact.Domain
 {
     public class ReceptuurArtikel: BaseSamengesteldArtikel
     {
+
     }
 }

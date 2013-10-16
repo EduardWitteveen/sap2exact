@@ -8,6 +8,12 @@ namespace access2exact.Domain
 {
     public class BaseSamengesteldArtikel: BaseArtikel
     {
-        public List<Stuklijst> Stuklijsten = new List<Stuklijst>();
+        public virtual  List<Stuklijst> Stuklijsten{ get; set; }
+
+        public BaseSamengesteldArtikel()
+            : base()
+        {
+            Stuklijsten= new List<Stuklijst>();
+        }
     }
 }
