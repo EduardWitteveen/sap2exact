@@ -23,7 +23,7 @@ namespace access2exact
             System.Threading.Thread.CurrentThread.CurrentUICulture = ci;
 
             var csb = new MaxDB.Data.MaxDBConnectionStringBuilder(Properties.Settings.Default.connection_string_sap);
-            Console.WriteLine("SAP Connectionstring: " + csb.ConnectionString);
+            Output.Info("SAP Connectionstring: " + csb.ConnectionString);
             var sapconnection = new MaxDB.Data.MaxDBConnection(csb.ConnectionString);
 
             // read the sap data
@@ -58,13 +58,13 @@ namespace access2exact
             serializer.Save(data);            
             // read from access
             data = serializer.Load();
- */ 
+ */
 
-            Console.Out.WriteLine("eindartikelen:" + data.EindArtikelen.Count);
-            Console.Out.WriteLine("recepturen:" + data.ReceptuurArtikelen.Count);
-            Console.Out.WriteLine("verpakkingen:" + data.VerpakkingsArtikelen.Count);
-            Console.Out.WriteLine("grondstoffen:" + data.GrondstofArtikelen.Count);
-            Console.Out.WriteLine("ingredienten:" + data.IngredientArtikelen.Count);
+            Output.Info("eindartikelen:" + data.EindArtikelen.Count);
+            Output.Info("recepturen:" + data.ReceptuurArtikelen.Count);
+            Output.Info("verpakkingen:" + data.VerpakkingsArtikelen.Count);
+            Output.Info("grondstoffen:" + data.GrondstofArtikelen.Count);
+            Output.Info("ingredienten:" + data.IngredientArtikelen.Count);
 
             // write the xml
             var exporter = new Domain2Xml();
