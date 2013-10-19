@@ -22,11 +22,11 @@ namespace access2exact
             this.sapconnection = sapconnection;
         }
 
-        private DateTime ConvertSapDate(object value)
+        private DateTime ConvertSapDate(object value, string where)
         {
             if (Convert.ToString(value) == "00000000")
             {
-                Console.Error.WriteLine("Could not convert the date!");
+                Output.Error("Could not convert the date for: " + where);
                 return DateTime.Now;
             }
             var str = Convert.ToString(value);
@@ -69,7 +69,7 @@ namespace access2exact
 
         public void Export2Excel(string name, string sql, Dictionary<string, object> parameters = null)
         {
-            Console.WriteLine("Exporting: " + name + "\n\t" + sql);
+            Output.Info("Exporting: " + name + "\n\t" + sql);
 
             // query
             var cmd = new MaxDB.Data.MaxDBCommand(sql, sapconnection);
@@ -139,13 +139,17 @@ namespace access2exact
 
                     int huidigeregel = artikeltable.Rows.IndexOf(artikelrow);
                     int totaalregels = artikeltable.Rows.Count;
-                    Console.Out.WriteLine("[ " + (int)((100.0 / totaalregels) * huidigeregel) + "% ] START:" + matnr);
+                    Output.Info("[ " + (int)((100.0 / totaalregels) * huidigeregel) + "% ] START:" + matnr);
 
                     if (data.Retrieve(matnr) == null)
                     {
                         data.Add(ReadArtikelData(matdt, matnr, 1));
                     }
-                    else Console.Error.WriteLine("Eindartikel fout, was al ingeladen: " + matnr);
+                    else
+                    {
+                        //System.Diagnostics.Debug.Assert(false);
+                        Output.Error("Eindartikel fout, was al ingeladen: " + matnr);
+                    }
                 }
             }
             else
@@ -192,7 +196,10 @@ namespace access2exact
                         var taxm1 = Convert.ToInt32(belastingrow["taxm1"]);
                         artikel.PrijsBelastingCategorie = taxm1;  //wat betekend wat?
                     }
-                    else Console.Error.WriteLine("NO TAX FOR ARTICLE:" + matnr); 
+                    else
+                    {
+                        Output.Error("NO TAX FOR ARTICLE:" + matnr);
+                    }
 
                     #endregion artikel belasting                    
                     break;
@@ -220,7 +227,7 @@ namespace access2exact
                     throw new NotImplementedException("unknown type:" + type);
             }
             artikel.Code = Convert.ToString(artikelrow["matnr"]);
-            artikel.TimeStamp = ConvertSapDate(artikelrow["laeda"]);
+            artikel.TimeStamp = ConvertSapDate(artikelrow["laeda"], "artikel:" + artikel.Code);
 
             #endregion artikeltype
 
@@ -327,7 +334,7 @@ namespace access2exact
                 else
                 {
                     artikel.PrijsKost = 0.0;
-                    Console.Error.WriteLine("GEEN PRIJS VOOR:" + matnr);
+                    Output.Error("GEEN PRIJS VOOR:" + matnr);
                 }
                 // Fix de niet 1 problemen:
                 // TODO: double check!!
@@ -387,10 +394,13 @@ namespace access2exact
             }
             #endregion artikel description
 
-            for (int i = 0; i < ident; i++) Console.Out.Write("\t");
-            Console.Out.WriteLine(artikel.Code + " " + mtart);
-            for (int i = 0; i < ident; i++) Console.Out.Write("\t");
-            Console.Out.WriteLine(" (" + artikel.Description + ")");
+            string output = "";
+            for (int i = 0; i < ident; i++) output += "\t";
+            output +=artikel.Code + " " + mtart;
+            for (int i = 0; i < ident; i++) output +="\t";
+            output +=" (" + artikel.Description + ")";
+            Output.Info(output);
+
 
             #region child data
             if (typeof(Domain.BaseSamengesteldArtikel).IsAssignableFrom(artikel.GetType())) {
@@ -405,7 +415,8 @@ namespace access2exact
         {
             if (ident > 10)
             {
-                Console.Error.WriteLine("RECURSIEVE FOUT!!" + artikel.Code);
+                System.Diagnostics.Debug.Assert(false);
+                Output.Error("RECURSIEVE FOUT!!" + artikel.Code);
                 return artikel;
             }
             // http://scn.sap.com/thread/75996
@@ -601,6 +612,66 @@ namespace access2exact
 //AND MAST.MATNR = :matnr
 //ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR
 //            ";
+//            var bomsql = @"
+//SELECT 
+//    MAST.STLAN AS MAST_STLAN,
+//    MAST.STLAL AS MAST_STLAL,
+//    MAST.STLNR AS MAST_STLNR,
+//    STKO.STKTX AS STKO_STKTX,
+//    STKO.DATUV AS STKO_DATUV,
+//    STKO.BMENG AS STKO_BMENG,
+//    STAS.AEDAT AS STAS_AEDAT,
+//    STPO.AEDAT AS STPO_AEDAT,
+//    STPO.MENGE AS STPO_MENGE,
+//    STPO.POSNR AS STPO_POSNR,
+//    STPO.IDNRK AS STPO_IDNRK
+//FROM MAST
+//JOIN STKO 
+//    ON STKO.MANDT  = MAST.MANDT
+//    AND STKO.STLNR = MAST.STLNR
+//    AND STKO.STLAL = MAST.STLAL
+//    AND STKO.LKENZ = ''
+//    AND STKO.LOEKZ = ''
+//    AND NOT STKO.STKOZ  IN
+//    (
+//        SELECT PREV_STKO.VGKZL
+//        FROM STKO PREV_STKO
+//        WHERE PREV_STKO.MANDT = MAST.MANDT 
+//        AND PREV_STKO.STLNR= MAST.STLNR        
+//    )
+//JOIN STAS
+//    ON STAS.MANDT = MAST.MANDT
+//    AND STAS.STLNR= MAST.STLNR
+//    AND STAS.STLAL = MAST.STLAL
+//    AND STAS.LKENZ = ''
+//JOIN STPO
+//    ON STPO.MANDT = MAST.MANDT 
+//    AND STPO.STLNR= MAST.STLNR
+//    AND STPO.LKENZ = ''
+//    AND NOT STPO.STPOZ IN
+//    (
+//        SELECT PREV_STPO.VGPZL
+//        FROM STPO PREV_STPO
+//        WHERE PREV_STPO.MANDT = MAST.MANDT 
+//        AND PREV_STPO.STLNR= MAST.STLNR        
+//    )
+//    AND  STPO.STLKN = STAS.STLKN
+//    AND  
+//    (
+//        STPO.AEDAT = '00000000'
+//        OR '00000000' NOT IN 
+//        (
+//            SELECT AEDAT_STPO.AEDAT
+//            FROM STPO AEDAT_STPO
+//            WHERE AEDAT_STPO.MANDT = MAST.MANDT 
+//            AND AEDAT_STPO.STLNR= MAST.STLNR                
+//        ) 
+//    )
+//WHERE MAST.MANDT= :mandt
+//AND MAST.WERKS= '0001'
+//AND MAST.MATNR = :matnr
+//ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR
+//            ";
             var bomsql = @"
 SELECT 
     MAST.STLAN AS MAST_STLAN,
@@ -609,18 +680,25 @@ SELECT
     STKO.STKTX AS STKO_STKTX,
     STKO.DATUV AS STKO_DATUV,
     STKO.BMENG AS STKO_BMENG,
+    STAS.STLKN AS STAS_STLKN,
     STAS.AEDAT AS STAS_AEDAT,
+    STAS.STVKN AS STAS_STVKN,
     STPO.AEDAT AS STPO_AEDAT,
     STPO.MENGE AS STPO_MENGE,
     STPO.POSNR AS STPO_POSNR,
-    STPO.IDNRK AS STPO_IDNRK
+    STPO.IDNRK AS STPO_IDNRK,
+    '------',
+    STKO.LKENZ AS STKO_LKENZ,
+    STKO.STKOZ AS STKO_STKOZ,
+    STAS.LKENZ AS STAS_LKENZ,
+    STAS.STASZ AS STAS_STASZ,
+    STPO.LKENZ  AS STPO_LKENZ,
+    STPO.STPOZ AS STPO_STPOZ
 FROM MAST
 JOIN STKO 
     ON STKO.MANDT  = MAST.MANDT
     AND STKO.STLNR = MAST.STLNR
     AND STKO.STLAL = MAST.STLAL
-    AND STKO.LKENZ = ''
-    AND STKO.LOEKZ = ''
     AND NOT STKO.STKOZ  IN
     (
         SELECT PREV_STKO.VGKZL
@@ -632,11 +710,19 @@ JOIN STAS
     ON STAS.MANDT = MAST.MANDT
     AND STAS.STLNR= MAST.STLNR
     AND STAS.STLAL = MAST.STLAL
-    AND STAS.LKENZ = ''
+    
+    AND NOT STAS.STLKN IN 
+    (
+        SELECT DEL_STAS.STLKN
+        FROM STAS DEL_STAS
+        WHERE DEL_STAS.MANDT = MAST.MANDT
+        AND DEL_STAS.STLNR= MAST.STLNR
+        AND DEL_STAS.STLAL = MAST.STLAL
+        AND DEL_STAS.LKENZ = 'X'        
+    )
 JOIN STPO
     ON STPO.MANDT = MAST.MANDT 
     AND STPO.STLNR= MAST.STLNR
-    AND STPO.LKENZ = ''
     AND NOT STPO.STPOZ IN
     (
         SELECT PREV_STPO.VGPZL
@@ -645,24 +731,10 @@ JOIN STPO
         AND PREV_STPO.STLNR= MAST.STLNR        
     )
     AND  STPO.STLKN = STAS.STLKN
-    AND  
-    (
-        STPO.AEDAT = '00000000'
-        OR '00000000' NOT IN 
-        (
-            SELECT AEDAT_STPO.AEDAT
-            FROM STPO AEDAT_STPO
-            WHERE AEDAT_STPO.MANDT = MAST.MANDT 
-            AND AEDAT_STPO.STLNR= MAST.STLNR                
-        ) 
-    )
 WHERE MAST.MANDT= :mandt
 AND MAST.WERKS= '0001'
 AND MAST.MATNR = :matnr
-ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR
-            ";
-
-
+ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR";
             /*
             '01010D15' = 10 t/m 50
             '33024D13' = 10 t/m 60
@@ -680,6 +752,10 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR
             Domain.Stuklijst stuklijst = null;
             foreach (DataRow bomrow in bomtable.Rows)
             {
+                System.Diagnostics.Debug.Assert(bomrow["STKO_LKENZ"].ToString() == "");
+                System.Diagnostics.Debug.Assert(bomrow["STAS_LKENZ"].ToString() == "");
+                System.Diagnostics.Debug.Assert(bomrow["STPO_LKENZ"].ToString() == "");
+
                 int stuklijstcode = Convert.ToInt32(bomrow["mast_stlal"]);
                 string stuklijstnaam = Convert.ToString(bomrow["stko_stktx"]);                
                 if (stuklijst == null || stuklijst.StuklijstVersion != stuklijstcode)
@@ -693,7 +769,7 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR
                     stuklijst.StuklijstNaam = stuklijstnaam;
                     stuklijst.StuklijstTotaalAantal = -1;
 
-                    stuklijst.StuklijstDatum = ConvertSapDate(bomrow["STKO_DATUV"]);
+                    stuklijst.StuklijstDatum = ConvertSapDate(bomrow["STKO_DATUV"], "artikel:" + artikel.Code + " stuklijstcode:" + stuklijstcode);
                     stuklijst.StuklijstTotaalAantal = Convert.ToDouble(bomrow["STKO_BMENG"]);
                 }
 
@@ -711,7 +787,7 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR
                                 found += Convert.ToInt32(c.ToString());
                             }
                         }
-                        Console.Error.WriteLine("invalid pos-nr in arikel:" + artikel.Code + " value: " + posnr + " assuming:" + found);
+                        Output.Error("invalid pos-nr in arikel:" + artikel.Code + " value: " + posnr + " assuming:" + found);
                     }
                     receptuurregel.Volgnummer = found;
                     receptuurregel.ReceptuurRegelAantal = Convert.ToDouble(bomrow["STPO_menge"]);
@@ -726,7 +802,7 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR
                         }
                         else
                         {
-                            Console.Error.WriteLine("Recursive usage of article:" + matnr + " in samengesteld-artikel:" + artikel.Code);
+                            Output.Error("Recursive usage of article:" + matnr + " in samengesteld-artikel:" + artikel.Code);
                         }
                     }
                     // geen ingredienten meenemen!
@@ -752,14 +828,24 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR
                     double aantal = slr.ReceptuurRegelAantal * slr.Artikel.PrijsGewichtNetto;
                     totaalaantal += aantal;
                 }
-                if (totaalaantal != sl.StuklijstTotaalAantal)
+                double berekendaantal = sl.StuklijstTotaalAantal * artikel.VerkoopAantalNetto;
+                double factortoegelaten =  0.001;    //  0.1%
+                if (
+                    totaalaantal > (berekendaantal + (berekendaantal * factortoegelaten)) 
+                    ||
+                    totaalaantal < (berekendaantal - (berekendaantal * factortoegelaten))
+                    )
                 {
-                    Console.Error.WriteLine("Ongeldig stuklijst totaal voor:" + artikel.Code + " verwacht: " + sl.StuklijstTotaalAantal + " berekend:" + totaalaantal );
-                    sl.StuklijstTotaalAantal = totaalaantal;
+                    Output.Error("Ongeldig stuklijst totaal voor:" + artikel.Code + " verwacht: " + totaalaantal + " berekend:" + totaalaantal + " x " + artikel.VerkoopAantalNetto + " = " + berekendaantal);
                 }
-            }        
-
+                sl.StuklijstTotaalAantal = totaalaantal;
+            }
             return artikel;
+        }
+
+        private void WriteError(string p)
+        {
+            throw new NotImplementedException();
         }
     }
 }
