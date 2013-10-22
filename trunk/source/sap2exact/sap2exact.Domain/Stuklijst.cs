@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace access2exact.Domain
+namespace sap2exact.Domain
 {
     public class Stuklijst
     {
@@ -36,7 +36,7 @@ namespace access2exact.Domain
                 if (StuklijstRegels[i].Volgnummer == receptuurregel.Volgnummer)
                 {
                     // skip if replaced in next loop?
-                    if (StuklijstRegels[i].Artikel.Code != receptuurregel.Artikel.Code)
+                    if (StuklijstRegels[i].Artikel.MateriaalCode != receptuurregel.Artikel.MateriaalCode)
                     {
                         receptuurregel.Volgnummer += 1;
                         i = 0;
@@ -46,7 +46,7 @@ namespace access2exact.Domain
             }
             // HACK HACK: dubbele artikelcode's
             for(int i = 0;i < StuklijstRegels.Count; i++) {
-                if(StuklijstRegels[i].Artikel.Code == receptuurregel.Artikel.Code) {
+                if(StuklijstRegels[i].Artikel.MateriaalCode == receptuurregel.Artikel.MateriaalCode) {
                     StuklijstRegels[i] = receptuurregel;
                     Console.Error.WriteLine("SHOULD BE FIXED: replacing stuklijst regel met dezelfde code!:");
                     return;

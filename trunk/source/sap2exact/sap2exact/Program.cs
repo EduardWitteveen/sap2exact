@@ -11,7 +11,7 @@ using System.Xml.Serialization;
 using System.IO;
 using System.Xml;
 
-namespace access2exact
+namespace sap2exact
 {
     public class Program
     {
@@ -29,7 +29,8 @@ namespace access2exact
             // read the sap data
             sapconnection.Open();
             var importer = new Database2Domain(sapconnection);
-            var data = importer.ReadEindArtikelData();
+            //var data = importer.ReadEindArtikelData();
+            var data = importer.ReadEindArtikelData("33024D13");
             //var data = importer.ReadEindArtikelData("81110X99");
             //var data = importer.ReadEindArtikelData("31010X99");
             //var data = importer.ReadEindArtikelData("23035X99");
@@ -74,3 +75,4 @@ namespace access2exact
         }
     }
 }
+

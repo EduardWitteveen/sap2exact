@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace access2exact.Properties {
+namespace sap2exact.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

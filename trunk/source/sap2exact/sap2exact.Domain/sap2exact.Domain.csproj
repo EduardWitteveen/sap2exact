@@ -44,6 +44,7 @@
     <Compile Include="EindArtikel.cs" />
     <Compile Include="ExportData.cs" />
     <Compile Include="GrondstofArtikel.cs" />
+    <Compile Include="HoeveelheidsEenheid.cs" />
     <Compile Include="IngredientArtikel.cs" />
     <Compile Include="ReceptuurArtikel.cs" />
     <Compile Include="Stuklijst.cs" />
