@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using NHibernate;
 using NHibernate.Cfg;
 
-namespace access2exact
+namespace sap2exact
 {
     public class Hibernator
     {

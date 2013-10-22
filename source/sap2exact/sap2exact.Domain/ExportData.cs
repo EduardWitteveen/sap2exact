@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 
-namespace access2exact.Domain
+namespace sap2exact.Domain
 {
     public class ExportData        
     {
@@ -44,24 +44,24 @@ namespace access2exact.Domain
         public virtual void Add(BaseArtikel artikel)
         {
             if(artikel.GetType() == typeof(EindArtikel)) {
-                EindArtikelen.Add(artikel.Code, (EindArtikel)artikel);
+                EindArtikelen.Add(artikel.MateriaalCode, (EindArtikel)artikel);
             }
             else if(artikel.GetType() == typeof(ReceptuurArtikel)) {
-                ReceptuurArtikelen.Add(artikel.Code, (ReceptuurArtikel)artikel);
+                ReceptuurArtikelen.Add(artikel.MateriaalCode, (ReceptuurArtikel)artikel);
             }
             else if(artikel.GetType() == typeof(VerpakkingsArtikel)) {
-                VerpakkingsArtikelen.Add(artikel.Code, (VerpakkingsArtikel)artikel);
+                VerpakkingsArtikelen.Add(artikel.MateriaalCode, (VerpakkingsArtikel)artikel);
             }
             else if(artikel.GetType() == typeof(GrondstofArtikel)) {
-                GrondstofArtikelen.Add(artikel.Code, (GrondstofArtikel)artikel);
+                GrondstofArtikelen.Add(artikel.MateriaalCode, (GrondstofArtikel)artikel);
             }
             else if (artikel.GetType() == typeof(IngredientArtikel))
             {
-                IngredientArtikelen.Add(artikel.Code, (IngredientArtikel)artikel);
+                IngredientArtikelen.Add(artikel.MateriaalCode, (IngredientArtikel)artikel);
 
             }
             else throw new NotImplementedException("unknown type: " + artikel.GetType().FullName);
-            AlleArtikelen.Add(artikel.Code, artikel);
+            AlleArtikelen.Add(artikel.MateriaalCode, artikel);
         }
     }
 }

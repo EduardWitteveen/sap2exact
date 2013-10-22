@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace access2exact
+namespace sap2exact
 {
     public class Domain2Xml
     {
@@ -44,22 +44,22 @@ namespace access2exact
 
         XmlElement CreateXmlRootArtikelElement(Domain.BaseArtikel artikel)
         {
-            System.Diagnostics.Debug.WriteLine("artikel:" + artikel.Code + " (" + artikel.GetType().Name + ")");
+            System.Diagnostics.Debug.WriteLine("artikel:" + artikel.MateriaalCode + " (" + artikel.GetType().Name + ")");
 
             var item = xmldocument.CreateElement("Item");
-            item.SetAttribute("code", CreateSapCode(artikel.Code));
-            var description = xmldocument.CreateElement("Description");
-            description.AppendChild(xmldocument.CreateTextNode(artikel.Description));
+            item.SetAttribute("code", CreateSapCode(artikel.MateriaalCode));
+            var description = xmldocument.CreateElement("ArtikelOmschrijving");
+            description.AppendChild(xmldocument.CreateTextNode(artikel.ArtikelOmschrijving));
             item.AppendChild(description);
 
             var multidescriptions = xmldocument.CreateElement("MultiDescriptions");
             for(int regel = 0; regel < 5; regel++) {
                 var multidescription = xmldocument.CreateElement("MultiDescription");
                 multidescription.SetAttribute("number", Convert.ToString(regel));
-                string md = artikel.Description;
-                if (artikel.Descriptions.ContainsKey(regel))
+                string md = artikel.ArtikelOmschrijving;
+                if (artikel.ArtikelOmschrijvingen.ContainsKey(regel))
                 {
-                    md = artikel.Descriptions[regel];
+                    md = artikel.ArtikelOmschrijvingen[regel];
                 }
                 multidescription.AppendChild(xmldocument.CreateTextNode(md));
                 multidescriptions.AppendChild(multidescription);
@@ -121,7 +121,7 @@ namespace access2exact
             var glrevenue = xmldocument.CreateElement("GLRevenue");
             //glrevenue.SetAttribute("code", "     86200");
             glrevenue.SetAttribute("code", "86200");
-            var gldescription = xmldocument.CreateElement("Description");
+            var gldescription = xmldocument.CreateElement("ArtikelOmschrijving");
             gldescription.AppendChild(xmldocument.CreateTextNode("SAP-IMPORT"));
             glrevenue.AppendChild(gldescription);
             item.AppendChild(glrevenue);
@@ -129,7 +129,7 @@ namespace access2exact
             var glcosts = xmldocument.CreateElement("GLCosts");
             //glcosts.SetAttribute("code", "     76200");
             glcosts.SetAttribute("code", "76200");
-            gldescription = xmldocument.CreateElement("Description");
+            gldescription = xmldocument.CreateElement("ArtikelOmschrijving");
             gldescription.AppendChild(xmldocument.CreateTextNode("SAP-IMPORT"));
             glcosts.AppendChild(gldescription);
             item.AppendChild(glcosts);
@@ -137,7 +137,7 @@ namespace access2exact
             var glpurchase = xmldocument.CreateElement("GLPurchase");
             //glpurchase.SetAttribute("code", "     30620");
             glpurchase.SetAttribute("code", "30620");
-            gldescription = xmldocument.CreateElement("Description");
+            gldescription = xmldocument.CreateElement("ArtikelOmschrijving");
             gldescription.AppendChild(xmldocument.CreateTextNode("SAP-IMPORT"));
             glpurchase.AppendChild(gldescription);
             item.AppendChild(glpurchase);
@@ -145,7 +145,7 @@ namespace access2exact
             var glaccountdiscount = xmldocument.CreateElement("GLAccountDiscount");
             //glaccountdiscount.SetAttribute("code", "     81020");
             glaccountdiscount.SetAttribute("code", "81020");
-            gldescription = xmldocument.CreateElement("Description");
+            gldescription = xmldocument.CreateElement("ArtikelOmschrijving");
             gldescription.AppendChild(xmldocument.CreateTextNode("SAP-IMPORT"));
             glaccountdiscount.AppendChild(gldescription);
             item.AppendChild(glaccountdiscount);
@@ -161,7 +161,7 @@ namespace access2exact
             currency.SetAttribute("code", "EUR");
             price.AppendChild(currency);
             var value= xmldocument.CreateElement("Value");
-            value.AppendChild(xmldocument.CreateTextNode(Convert.ToString(artikel.PrijsKost)));
+            value.AppendChild(xmldocument.CreateTextNode(Convert.ToString(artikel.KostPrijs)));
             price.AppendChild(value);
             costs.AppendChild(price);
             item.AppendChild(costs);
@@ -169,7 +169,7 @@ namespace access2exact
 
             var dimension = xmldocument.CreateElement("Dimension");
             var weightnet = xmldocument.CreateElement("WeightNet");
-            weightnet.AppendChild(xmldocument.CreateTextNode(Convert.ToString(artikel.PrijsGewichtNetto)));
+            weightnet.AppendChild(xmldocument.CreateTextNode(Convert.ToString(artikel.ExactGewensteNettoGewicht)));
             dimension.AppendChild(weightnet);
             item.AppendChild(dimension);
 
@@ -186,10 +186,10 @@ namespace access2exact
                 currency.SetAttribute("code", "EUR");
                 price.AppendChild(currency);
                 var value = xmldocument.CreateElement("Value");
-                value.AppendChild(xmldocument.CreateTextNode(Convert.ToString(artikel.PrijsVerkoop)));
+                value.AppendChild(xmldocument.CreateTextNode(Convert.ToString(artikel.VerkoopPrijs)));
                 price.AppendChild(value);
                 var vat = xmldocument.CreateElement("VAT");
-                vat.SetAttribute("code", Convert.ToString(artikel.PrijsBelastingCategorie));
+                vat.SetAttribute("code", Convert.ToString(artikel.ExactGewensteBelastingCategorie));
                 vat.SetAttribute("type", "B");
                 vat.SetAttribute("vattype", "E");
                 //vat.SetAttribute("taxtype", "V");
@@ -197,9 +197,9 @@ namespace access2exact
                 sales.AppendChild(price);
 //            }            
             var unit = xmldocument.CreateElement("Unit");
-            //unit.SetAttribute("unit", artikel.PrijsEenheid);
-            //unit.SetAttribute("unit", artikel.VerkoopVerpakking);
-            unit.SetAttribute("unit", artikel.PrijsEenheid);
+            //unit.SetAttribute("unit", artikel.Gewichtseenheid);
+            //unit.SetAttribute("unit", artikel.BasishoeveelheidEenheid);
+            unit.SetAttribute("unit", artikel.Gewichtseenheid);
             unit.SetAttribute("type", "W");
             unit.SetAttribute("active", "1");
             sales.AppendChild(unit);
@@ -227,10 +227,10 @@ namespace access2exact
                 foreach (Domain.Stuklijst stuklijst in artikel.Stuklijsten)
                 {
                     var bom = xmldocument.CreateElement("BOM");
-                    bom.SetAttribute("code", CreateSapCode(artikel.Code));
+                    bom.SetAttribute("code", CreateSapCode(artikel.MateriaalCode));
                     bom.SetAttribute("versionnumber", Convert.ToString(stuklijst.StuklijstVersion));
 
-                    var description = xmldocument.CreateElement("Description");
+                    var description = xmldocument.CreateElement("ArtikelOmschrijving");
                     var stuklijstnaam = stuklijst.StuklijstNaam;
                     if (stuklijstnaam.Length == 0)
                     {
@@ -259,10 +259,10 @@ namespace access2exact
                         bomline.SetAttribute("type", "I");
                         bomline.SetAttribute("sequencenumber", receptuurregel.Volgnummer.ToString());
                         var bomitem = xmldocument.CreateElement("Item");
-                        bomitem.SetAttribute("code", CreateSapCode(receptuurregel.Artikel.Code));
-                        var bomdescription = xmldocument.CreateElement("Description");
+                        bomitem.SetAttribute("code", CreateSapCode(receptuurregel.Artikel.MateriaalCode));
+                        var bomdescription = xmldocument.CreateElement("ArtikelOmschrijving");
 
-                        bomdescription.AppendChild(xmldocument.CreateTextNode(receptuurregel.Artikel.Description));
+                        bomdescription.AppendChild(xmldocument.CreateTextNode(receptuurregel.Artikel.ArtikelOmschrijving));
                         bomitem.AppendChild(bomdescription);
                         bomline.AppendChild(bomitem);
 
@@ -293,21 +293,21 @@ namespace access2exact
             var account = xmldocument.CreateElement("Account");
 
             string leverancierscode = "999990";
-            string leverancierstekst = "Samengesteld:" + artikel.Code;
+            string leverancierstekst = "Samengesteld:" + artikel.MateriaalCode;
             if (artikel.GetType() == typeof(Domain.EindArtikel))
             {
                 leverancierscode = "040012";
-                leverancierstekst = "Eindartikel:" + artikel.Code;
+                leverancierstekst = "Eindartikel:" + artikel.MateriaalCode;
             }
             else if (artikel.GetType() == typeof(Domain.GrondstofArtikel))
             {
                 leverancierscode = "999980";
-                leverancierstekst = "Grondstof:" + artikel.Code;
+                leverancierstekst = "Grondstof:" + artikel.MateriaalCode;
             }
             else if (artikel.GetType() == typeof(Domain.VerpakkingsArtikel))
             {
                 leverancierscode = "999980";
-                leverancierstekst = "Verpakking:" + artikel.Code;
+                leverancierstekst = "Verpakking:" + artikel.MateriaalCode;
             }
             account.SetAttribute("code", leverancierscode);
             itemaccount.AppendChild(account);
@@ -326,14 +326,14 @@ namespace access2exact
             price.AppendChild(value);
 
             var unit = xmldocument.CreateElement("Unit");
-            //unit.SetAttribute("unit", artikel.VerkoopVerpakking);
-            unit.SetAttribute("unit", artikel.VerkoopVerpakking);            
+            //unit.SetAttribute("unit", artikel.BasishoeveelheidEenheid);
+            unit.SetAttribute("unit", artikel.BasishoeveelheidEenheid);            
             unit.SetAttribute("type", "O");
             unit.SetAttribute("active", "1");
             purchase.AppendChild(unit);
 
             var salesunit = xmldocument.CreateElement("SalesUnits");
-            salesunit.AppendChild(xmldocument.CreateTextNode(Convert.ToString(artikel.VerkoopAantalNetto)));
+            salesunit.AppendChild(xmldocument.CreateTextNode(Convert.ToString(artikel.NettoGewicht)));
             purchase.AppendChild(salesunit);
             itemaccount.AppendChild(purchase);
 
@@ -370,7 +370,7 @@ namespace access2exact
 
             foreach (Domain.GrondstofArtikel grondstofartikel in data.GrondstofArtikelen.Values)
             {
-                items.AppendChild(xmldocument.CreateComment("GrondStof:" + grondstofartikel.Code));
+                items.AppendChild(xmldocument.CreateComment("GrondStof:" + grondstofartikel.MateriaalCode));
                 var item = CreateXmlRootArtikelElement(grondstofartikel);
                 item = AddXmlVrijeveldenArtikel(item, grondstofartikel);
                 item = AddXmlRootArtikelFooter(item, grondstofartikel);
@@ -378,7 +378,7 @@ namespace access2exact
             }
             foreach (Domain.VerpakkingsArtikel verpakkingartikel in data.VerpakkingsArtikelen.Values)
             {
-                items.AppendChild(xmldocument.CreateComment("Verpakking:" + verpakkingartikel.Code));
+                items.AppendChild(xmldocument.CreateComment("Verpakking:" + verpakkingartikel.MateriaalCode));
                 var item = CreateXmlRootArtikelElement(verpakkingartikel);
                 item = AddXmlVrijeveldenArtikel(item, verpakkingartikel);
                 item = AddXmlRootArtikelFooter(item, verpakkingartikel);
@@ -386,7 +386,7 @@ namespace access2exact
             }
             foreach (Domain.ReceptuurArtikel receptuurartikel in data.ReceptuurArtikelen.Values)
             {
-                items.AppendChild(xmldocument.CreateComment("Receptuur:" + receptuurartikel.Code));
+                items.AppendChild(xmldocument.CreateComment("Receptuur:" + receptuurartikel.MateriaalCode));
                 var item = CreateXmlRootArtikelElement(receptuurartikel);
                 item = AddXmlSamengesteldArtikel(item, receptuurartikel);               
                 item = AddXmlVrijeveldenArtikel(item, receptuurartikel);
@@ -395,7 +395,7 @@ namespace access2exact
             }
             foreach (Domain.EindArtikel eindartikel in data.EindArtikelen.Values)
             {
-                items.AppendChild(xmldocument.CreateComment("Eindartikel:" + eindartikel.Code));
+                items.AppendChild(xmldocument.CreateComment("Eindartikel:" + eindartikel.MateriaalCode));
                 var item = CreateXmlRootArtikelElement(eindartikel);
                 item = AddXmlSamengesteldArtikel(item, eindartikel);
                 item = AddXmlVrijeveldenArtikel(item, eindartikel);
@@ -434,7 +434,7 @@ namespace access2exact
             // aantal in verpakking
             var freenumer7 = xmldocument.CreateElement("FreeNumber");
             freenumer7.SetAttribute("number", "7");
-            freenumer7.AppendChild(xmldocument.CreateTextNode(Convert.ToString(artikel.VerkoopAantalNetto)));
+            freenumer7.AppendChild(xmldocument.CreateTextNode(Convert.ToString(artikel.NettoGewicht)));
             freenumbers.AppendChild(freenumer7);
             
             freefields.AppendChild(freenumbers);
@@ -471,7 +471,7 @@ namespace access2exact
             var itemcategory = xmldocument.CreateElement("ItemCategory");
             itemcategory.SetAttribute("number", "3");
             itemcategory.SetAttribute("code", iccode);
-            var description = xmldocument.CreateElement("Description");
+            var description = xmldocument.CreateElement("ArtikelOmschrijving");
             description.AppendChild(xmldocument.CreateTextNode(icdescription));
             itemcategory.AppendChild(description);
             item.AppendChild(itemcategory);
@@ -481,7 +481,7 @@ namespace access2exact
                 itemcategory = xmldocument.CreateElement("ItemCategory");
                 itemcategory.SetAttribute("number", "6");
                 itemcategory.SetAttribute("code", "30");
-                description = xmldocument.CreateElement("Description");
+                description = xmldocument.CreateElement("ArtikelOmschrijving");
                 description.AppendChild(xmldocument.CreateTextNode("Productie-artikel Vlaardingen"));
                 itemcategory.AppendChild(description);
                 item.AppendChild(itemcategory);
@@ -489,7 +489,7 @@ namespace access2exact
                 itemcategory = xmldocument.CreateElement("ItemCategory");
                 itemcategory.SetAttribute("number", "7");
                 itemcategory.SetAttribute("code", "BULK");
-                description = xmldocument.CreateElement("Description");
+                description = xmldocument.CreateElement("ArtikelOmschrijving");
                 description.AppendChild(xmldocument.CreateTextNode("Bulkproduct"));
                 itemcategory.AppendChild(description);
                 item.AppendChild(itemcategory);

@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace access2exact
+namespace sap2exact
 {
     public class Database2Domain
     {
@@ -67,6 +67,42 @@ namespace access2exact
             return table;
         }
 
+        public string Convert2VerpakkingsType(object type)
+        {
+            string verpakkingtype = Convert.ToString(type);
+            if (type == "") return verpakkingtype;
+            if (verpakkingtype == "DS")
+            {
+                verpakkingtype = "doos";
+            }
+            else if (verpakkingtype == "KG")
+            {
+                verpakkingtype = "kg";
+            }
+            else if (verpakkingtype == "KN")
+            {
+                verpakkingtype = "kg nat";
+            }
+            else if (verpakkingtype == "ST")
+            {
+                verpakkingtype = "stuk";
+            }
+            else if (verpakkingtype == "CH")
+            {
+                verpakkingtype = "charge";
+            }
+            else if (verpakkingtype == "EEN")
+            {
+                verpakkingtype = "Eenmalige";
+            }
+            else
+            {
+                Output.Error("unknown eenheid:" + verpakkingtype);
+                verpakkingtype = null;
+            }
+            return verpakkingtype;
+        }
+
         public void Export2Excel(string name, string sql, Dictionary<string, object> parameters = null)
         {
             Output.Info("Exporting: " + name + "\n\t" + sql);
@@ -98,6 +134,21 @@ namespace access2exact
 
         public Domain.ExportData ReadEindArtikelData(String artikelnummer = null)
         {
+            /*
+            General Material Data     MARA
+            Material Descriptions     MAKT
+            Plant Data for Material     MARC
+            Material Valuation     MBEW
+            Storage Location Data for Material     MARD
+            Units of Measure for Material     MARM
+            Sales Data for Material     MVKE
+            Forecast Parameters     MPOP
+            Planning Data     MPGD_MASS
+            Tax Classification for Material     MLAN
+            Material Data for Each Warehouse Number     MLGN
+            Material Data for Each Storage Type     MLGT
+             */
+
             data = new Domain.ExportData();
             if (artikelnummer == null)
             {
@@ -194,7 +245,7 @@ namespace access2exact
                     {
                         Debug.Assert("NL" == Convert.ToString(belastingrow["aland"]));
                         var taxm1 = Convert.ToInt32(belastingrow["taxm1"]);
-                        artikel.PrijsBelastingCategorie = taxm1;  //wat betekend wat?
+                        artikel.ExactGewensteBelastingCategorie = taxm1;  //wat betekend wat?
                     }
                     else
                     {
@@ -205,34 +256,34 @@ namespace access2exact
                     break;
                 case "HALB":
                     artikel = new Domain.ReceptuurArtikel();
-                    artikel.PrijsBelastingCategorie = 2;
+                    artikel.ExactGewensteBelastingCategorie = 2;
                     break;
                 case "ZROH":
                 case "ROH":
                     artikel = new Domain.GrondstofArtikel();
-                    artikel.PrijsBelastingCategorie = 2;
+                    artikel.ExactGewensteBelastingCategorie = 2;
                     break;
                 case "INGR":
                     artikel = new Domain.IngredientArtikel();
-                    artikel.PrijsBelastingCategorie = 2;
+                    artikel.ExactGewensteBelastingCategorie = 2;
                     break;
                 case "VERP":
                 case "LEER":
                     // https://help.sap.com/saphelp_45b/helpdata/en/ff/515afd49d811d182b80000e829fbfe/content.htm
                     artikel = new Domain.VerpakkingsArtikel();
-                    artikel.PrijsBelastingCategorie = 4;
+                    artikel.ExactGewensteBelastingCategorie = 4;
                     break;
                 default:
                     string type = Convert.ToString(artikelrow["bom_artikelsoort"]);
                     throw new NotImplementedException("unknown type:" + type);
             }
-            artikel.Code = Convert.ToString(artikelrow["matnr"]);
-            artikel.TimeStamp = ConvertSapDate(artikelrow["laeda"], "artikel:" + artikel.Code);
+            artikel.MateriaalCode = Convert.ToString(artikelrow["matnr"]);
+            artikel.TimeStamp = ConvertSapDate(artikelrow["laeda"], "artikel:" + artikel.MateriaalCode);
 
             #endregion artikeltype
 
             // verpakkingen = 0, al het andere 1 in gewicht
-            artikel.PrijsGewichtNetto = artikel.GetType() == typeof(Domain.VerpakkingsArtikel) ? 0.0 : 1.0;
+            artikel.ExactGewensteNettoGewicht = artikel.GetType() == typeof(Domain.VerpakkingsArtikel) ? 0.0 : 1.0;
 
             #region artikel verpakking
             var verpakkingsql = @"
@@ -247,26 +298,9 @@ namespace access2exact
             var meins = Convert.ToString(artikelrow["meins"]);
             var verpakkingrow = QueryRow(verpakkingsql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", matnr }, { ":meins", meins } });
             //artikel.VerkoopGewichtEenheid = Convert.ToString(artikelrow["GEWEI"]);
-            string verpakkingtype = Convert.ToString(verpakkingrow["MEINH"]);
-            if (verpakkingtype == "DS")
-            {
-                verpakkingtype = "doos";
-            }
-            else if (verpakkingtype == "KG")
-            {
-                verpakkingtype = "kg";
-            }
-            else if (verpakkingtype == "ST")
-            {
-                verpakkingtype = "stuk";
-            }
-            else 
-            {
-                verpakkingtype = "kg";
-            }
-            artikel.VerkoopVerpakking  = verpakkingtype;
-            artikel.VerkoopAantalNetto = Convert.ToDouble(artikelrow["NTGEW"]);
-            artikel.VerkoopAantalBruto = Convert.ToDouble(artikelrow["BRGEW"]);
+            artikel.BasishoeveelheidEenheid = Convert2VerpakkingsType(verpakkingrow["MEINH"]);
+            artikel.NettoGewicht = Convert.ToDouble(artikelrow["NTGEW"]);
+            artikel.BruttoGewicht = Convert.ToDouble(artikelrow["BRGEW"]);
             artikel.HoudbaarheidInDagen = Convert.ToInt32(artikelrow["MHDHB"]);            
 
             //artikel.VerkoopEenheid = Convert.ToString(artikelrow["GEWEI"]);
@@ -329,32 +363,32 @@ namespace access2exact
                 var pricerow = QueryRow(pricesql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", matnr }, { ":bwkey", "0001" } });
                 if (pricerow != null)
                 {
-                    artikel.PrijsKost = Convert.ToDouble(pricerow["stprs"]);
+                    artikel.KostPrijs = Convert.ToDouble(pricerow["stprs"]);
                 }
                 else
                 {
-                    artikel.PrijsKost = 0.0;
+                    artikel.KostPrijs = 0.0;
                     Output.Error("GEEN PRIJS VOOR:" + matnr);
                 }
                 // Fix de niet 1 problemen:
                 // TODO: double check!!
-                artikel.PrijsKost = artikel.PrijsKost / artikel.VerkoopAantalNetto;
-                artikel.PrijsVerkoop = 0;
+                artikel.KostPrijs = artikel.KostPrijs / artikel.NettoGewicht;
+                artikel.VerkoopPrijs = 0;
                 if (artikel.GetType() == typeof(Domain.VerpakkingsArtikel))
                 {
                     // verpakkingen in stuks, de rest in kg
-                    artikel.PrijsEenheid = "stuks";
+                    artikel.Gewichtseenheid = "stuks";
                 }
                 else
                 {
-                    artikel.PrijsEenheid = "kg";
+                    artikel.Gewichtseenheid = "kg";
                 }
             }
             #endregion artikel price            
 
             #region artikel description
             var descriptionsql = @"
-                -- Material Descriptions
+                -- Material ArtikelOmschrijvingen
                 -- http://www.stechno.net/sap-tables.html?view=saptable&id=MAKT
                 SELECT *
                 FROM MAKT
@@ -367,26 +401,26 @@ namespace access2exact
                 string taal = Convert.ToString(descriptionrow["spras"]);
                 string description = Convert.ToString(descriptionrow["maktx"]);
 
-                if (artikel.Description == null || taal == "N")
+                if (artikel.ArtikelOmschrijving == null || taal == "N")
                 {
-                    artikel.Description = description;
+                    artikel.ArtikelOmschrijving = description;
                 }
                 switch (taal) {
                     case "N":   // nederlands
-                        artikel.Descriptions.Add(0, description);
+                        artikel.ArtikelOmschrijvingen.Add(0, description);
                         break;
                     case "E":   // engels
-                        artikel.Descriptions.Add(1, description);
+                        artikel.ArtikelOmschrijvingen.Add(1, description);
                         break;
                     case "D":   // duits
-                        artikel.Descriptions.Add(2, description);
+                        artikel.ArtikelOmschrijvingen.Add(2, description);
                         break;
                     case "F":   // frans
-                        artikel.Descriptions.Add(3, description);
+                        artikel.ArtikelOmschrijvingen.Add(3, description);
                         break;
                     case "I":   // italiaans
                         // TODO: kan niet opgeslagen worden in exact!!
-                        artikel.Descriptions.Add(4, description);
+                        artikel.ArtikelOmschrijvingen.Add(4, description);
                         break;
                     default:
                         throw new NotImplementedException("unknown langues:" + taal);
@@ -394,11 +428,43 @@ namespace access2exact
             }
             #endregion artikel description
 
+            #region artikel eenheid
+            var eenheidsql = @"
+                SELECT 
+                    UMREN,
+                    MEINH,
+                    UMREZ,
+                    BRGEW,
+                    GEWEI
+                FROM MARM
+                WHERE MANDT = :mandt
+                AND MATNR = :matnr
+            ";
+            var eenheidtable = QueryTable(eenheidsql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", matnr } });
+            foreach (DataRow eenheidrow in eenheidtable.Rows)
+            {
+                Domain.HoeveelheidsEenheid he = new Domain.HoeveelheidsEenheid();
+                he.vanEenheid = Convert2VerpakkingsType(eenheidrow["MEINH"]); 
+                he.vanAantal = Convert.ToDouble(eenheidrow["UMREN"]);
+                he.naarAantal = Convert.ToDouble(eenheidrow["UMREZ"]);
+                he.naarBruto = Convert.ToDouble(eenheidrow["BRGEW"]);
+                he.naarEenheid = Convert2VerpakkingsType(verpakkingrow["GEWEI"]);
+
+                if (he.vanEenheid != null)
+                {
+                    artikel.HoeveelheidsEenheden.Add(he.vanEenheid, he);
+                }
+            }
+
+            #endregion artikel eenheid
+
+
+
             string output = "";
             for (int i = 0; i < ident; i++) output += "\t";
-            output +=artikel.Code + " " + mtart;
+            output +=artikel.MateriaalCode + " " + mtart;
             for (int i = 0; i < ident; i++) output +="\t";
-            output +=" (" + artikel.Description + ")";
+            output +=" (" + artikel.ArtikelOmschrijving + ")";
             Output.Info(output);
 
 
@@ -416,262 +482,9 @@ namespace access2exact
             if (ident > 10)
             {
                 System.Diagnostics.Debug.Assert(false);
-                Output.Error("RECURSIEVE FOUT!!" + artikel.Code);
+                Output.Error("RECURSIEVE FOUT!!" + artikel.MateriaalCode);
                 return artikel;
             }
-            // http://scn.sap.com/thread/75996
-//            var bomsql = @"
-//                -- Material to BOM Link
-//                -- http://www.stechno.net/sap-tables.html?view=saptable&id=MAST
-//
-//                -- BOM Header
-//                -- http://www.stechno.net/sap-tables.html?view=saptable&id=STKO
-//
-//                -- BOMs - Item Selection
-//                -- http://www.stechno.net/sap-tables.html?view=saptable&id=STAS
-//
-//                -- BOM item
-//                -- http://www.stechno.net/sap-tables.html?view=saptable&id=STPO
-//                SELECT
-//                    MAST.MATNR AS MAST_MATNR,
-//                    MAST.STLNR AS MAST_STLNR,
-//                    MAST.STLAL AS MAST_STLAL,    -- Alternative BOM
-//
-//                    STKO.STLTY AS STKO_STLTY,
-//                    STKO.STLNR AS STKO_STLNR,
-//                    STKO.STLAL AS STKO_STLAL,
-//                    STKO.STKTX AS STKO_STKTX,
-//                    STKO.DATUV AS STKO_DATUV,
-//
-//                    STAS.STLTY AS STAS_STLTY,
-//                    STAS.STLNR AS STAS_STLNR,
-//                    STAS.STLKN AS STAS_STLKN,
-//    
-//                    STPO.IDNRK AS STPO_IDNRK,
-//                    STPO.POSNR AS STPO_POSNR,
-//                    STPO.MENGE AS STPO_MENGE
-//                FROM MAST
-//                INNER JOIN STKO
-//	                ON STKO.LKENZ = ''
-//	                AND STKO.LOEKZ = ''
-// 	                AND STKO.MANDT = MAST.MANDT 
-//	                AND STKO.STLNR = MAST.STLNR
-//	                AND STKO.STLAL = MAST.STLAL
-//	                AND STKO.STKOZ NOT IN 
-//	                (
-//		                /* ALLEEN DE LAATSTE! */
-//		                SELECT vorige_stko.VGKZL
-//		                FROM STKO vorige_stko
-//		                WHERE vorige_stko.STLNR = MAST.STLNR
-//		                AND vorige_stko.STLAL = MAST.STLAL                    
-//	                )
-//                INNER JOIN STAS
-//	                ON STAS.LKENZ = ''
-//	                AND STAS.MANDT = STKO.MANDT 
-//	                AND STAS.STLTY = STKO.STLTY
-//	                AND STAS.STLNR = STKO.STLNR
-// 	                AND STAS.STLAL = STKO.STLAL 
-//                    /* STASZ = */
-// 	                AND STAS.DATUV = 
-//                    (
-//                        /* ALLEEN DATUM HOOGSTE ! */
-//		                SELECT MAX(laatste_stas.DATUV)
-//		                FROM STAS laatste_stas
-//    	                WHERE laatste_stas.LKENZ = ''
-//	                    AND laatste_stas.MANDT = STKO.MANDT
-//	                    AND laatste_stas.STLTY = STKO.STLTY
-//	                    AND laatste_stas.STLNR = STKO.STLNR
-// 	                    AND laatste_stas.STLAL = STKO.STLAL 
-//                )
-//                INNER JOIN STPO
-//	                ON  STPO.LKENZ = ''
-// 	                AND STPO.MANDT = STAS.MANDT 
-//	                AND STPO.STLTY = STAS.STLTY
-//	                AND STPO.STLNR = STAS.STLNR
-//	                AND STPO.STLKN = STAS.STLKN
-//	                AND STPO.STPOZ NOT IN 
-//	                (
-//		                /* ALLEEN DE LAATSTE! */
-//		                SELECT vorige_stpo.VGPZL
-//		                FROM STPO vorige_stpo
-//		                WHERE vorige_stpo.STLTY = STAS.STLTY
-//		                AND vorige_stpo.STLNR = STAS.STLNR
-//	                )  
-//                WHERE MAST.MANDT = :mandt
-//                AND MAST.MATNR =  :matnr
-//                ORDER BY MAST_STLAL, STPO_POSNR
-//            ";
-//            var bomsql = @"
-//                -- Material to BOM Link
-//                -- http://www.stechno.net/sap-tables.html?view=saptable&id=MAST
-//                -- BOM Header
-//                -- http://www.stechno.net/sap-tables.html?view=saptable&id=STKO
-//                -- BOMs - Item Selection
-//                -- http://www.stechno.net/sap-tables.html?view=saptable&id=STAS
-//                -- BOM item
-//                -- http://www.stechno.net/sap-tables.html?view=saptable&id=STPO
-//                SELECT
-//                    MAST.MATNR AS MAST_MATNR,
-//                    MAST.STLNR AS MAST_STLNR,
-//                    MAST.STLAL AS MAST_STLAL,    -- Alternative BOM
-//
-//                    STKO.STLTY AS STKO_STLTY,
-//                    STKO.STLNR AS STKO_STLNR,
-//                    STKO.STLAL AS STKO_STLAL,
-//                    STKO.STKTX AS STKO_STKTX,
-//                    STKO.DATUV AS STKO_DATUV,
-//                    STKO.BMENG AS STKO_BMENG,
-//                    
-//                    STAS.STLTY AS STAS_STLTY,
-//                    STAS.STLNR AS STAS_STLNR,
-//                    STAS.STLKN    AS STAS_STLKN,
-//                        
-//                    STPO.IDNRK AS STPO_IDNRK,
-//                    STPO.POSNR AS STPO_POSNR,
-//                    STPO.MENGE AS STPO_MENGE
-//                FROM MAST
-//                INNER JOIN STKO
-//	                ON STKO.LKENZ = ''
-//	                AND STKO.LOEKZ = ''
-// 	                AND STKO.MANDT = MAST.MANDT 
-//	                AND STKO.STLNR = MAST.STLNR
-//	                AND STKO.STLAL = MAST.STLAL
-//	                AND STKO.STKOZ NOT IN 
-//	                (
-//		                /* ALLEEN DE LAATSTE! */
-//		                SELECT vorige_stko.VGKZL
-//		                FROM STKO vorige_stko
-//		                WHERE vorige_stko.STLNR = MAST.STLNR
-//		                AND vorige_stko.STLAL = MAST.STLAL                    
-//	                )
-//                 INNER JOIN STAS
-//                    ON STAS.LKENZ = ''
-//                    AND STAS.MANDT = STKO.MANDT 
-//                    AND STAS.STLTY =STKO.STLTY
-//                    AND STAS.STLNR = STKO.STLNR
-//                    AND STAS.STLAL = STKO.STLAL
-//                INNER JOIN STPO
-//	                ON  STPO.LKENZ = ''
-// 	                AND STPO.MANDT = STAS.MANDT 
-//	                AND STPO.STLTY = STAS.STLTY
-//	                AND STPO.STLNR = STAS.STLNR
-//	                AND STPO.STLKN = STAS.STLKN                 
-//	                AND STPO.STPOZ NOT IN 
-//	                (
-//		                /* ALLEEN DE LAATSTE! */
-//		                SELECT vorige_stpo.VGPZL
-//		                FROM STPO vorige_stpo
-//		                WHERE vorige_stpo.STLTY = STKO.STLTY
-//		                AND vorige_stpo.STLNR = STKO.STLNR
-//	                )    
-//                WHERE MAST.MANDT = :mandt
-//                AND MAST.MATNR =  :matnr
-//                AND STPO.AEDAT = '00000000'
-//                ORDER BY MAST_STLAL, STPO_POSNR
-//            ";
-//            var bomsql = @"
-//SELECT 
-//    MAST.STLAN AS MAST_STLAN,
-//    MAST.STLAL AS MAST_STLAL,
-//    STKO.STKTX AS STKO_STKTX,
-//    STKO.DATUV AS STKO_DATUV,
-//    STKO.BMENG AS STKO_BMENG,
-//    STPO.*
-//FROM MAST
-//JOIN STKO 
-//    ON STKO.MANDT  = MAST.MANDT
-//    AND STKO.STLNR = MAST.STLNR
-//    AND STKO.STLAL = MAST.STLAL
-//    AND STKO.LKENZ = ''
-//    AND STKO.LOEKZ = ''
-//    AND NOT STKO.STKOZ  IN
-//    (
-//        SELECT PREV_STKO.VGKZL
-//        FROM STKO PREV_STKO
-//        WHERE PREV_STKO.MANDT = MAST.MANDT 
-//        AND PREV_STKO.STLNR= MAST.STLNR        
-//    )
-//JOIN STAS
-//    ON STAS.MANDT  = MAST.MANDT
-//    AND STAS.STLNR = MAST.STLNR
-//    AND STAS.STLAL = MAST.STLAL
-//JOIN STPO
-//    ON STPO.MANDT = MAST.MANDT 
-//    AND STPO.STLNR= MAST.STLNR
-//    AND STPO.STLKN = STAS.STLKN
-//    AND STPO.LKENZ = ''
-//    AND NOT STPO.STPOZ IN
-//    (
-//        SELECT PREV_STPO.VGPZL
-//        FROM STPO PREV_STPO
-//        WHERE PREV_STPO.MANDT = MAST.MANDT 
-//        AND PREV_STPO.STLNR= MAST.STLNR        
-//    )
-//WHERE MAST.MANDT= :mandt
-//AND MAST.WERKS= '0001'
-//AND MAST.MATNR = :matnr
-//ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR
-//            ";
-//            var bomsql = @"
-//SELECT 
-//    MAST.STLAN AS MAST_STLAN,
-//    MAST.STLAL AS MAST_STLAL,
-//    MAST.STLNR AS MAST_STLNR,
-//    STKO.STKTX AS STKO_STKTX,
-//    STKO.DATUV AS STKO_DATUV,
-//    STKO.BMENG AS STKO_BMENG,
-//    STAS.AEDAT AS STAS_AEDAT,
-//    STPO.AEDAT AS STPO_AEDAT,
-//    STPO.MENGE AS STPO_MENGE,
-//    STPO.POSNR AS STPO_POSNR,
-//    STPO.IDNRK AS STPO_IDNRK
-//FROM MAST
-//JOIN STKO 
-//    ON STKO.MANDT  = MAST.MANDT
-//    AND STKO.STLNR = MAST.STLNR
-//    AND STKO.STLAL = MAST.STLAL
-//    AND STKO.LKENZ = ''
-//    AND STKO.LOEKZ = ''
-//    AND NOT STKO.STKOZ  IN
-//    (
-//        SELECT PREV_STKO.VGKZL
-//        FROM STKO PREV_STKO
-//        WHERE PREV_STKO.MANDT = MAST.MANDT 
-//        AND PREV_STKO.STLNR= MAST.STLNR        
-//    )
-//JOIN STAS
-//    ON STAS.MANDT = MAST.MANDT
-//    AND STAS.STLNR= MAST.STLNR
-//    AND STAS.STLAL = MAST.STLAL
-//    AND STAS.LKENZ = ''
-//JOIN STPO
-//    ON STPO.MANDT = MAST.MANDT 
-//    AND STPO.STLNR= MAST.STLNR
-//    AND STPO.LKENZ = ''
-//    AND NOT STPO.STPOZ IN
-//    (
-//        SELECT PREV_STPO.VGPZL
-//        FROM STPO PREV_STPO
-//        WHERE PREV_STPO.MANDT = MAST.MANDT 
-//        AND PREV_STPO.STLNR= MAST.STLNR        
-//    )
-//    AND  STPO.STLKN = STAS.STLKN
-//    AND  
-//    (
-//        STPO.AEDAT = '00000000'
-//        OR '00000000' NOT IN 
-//        (
-//            SELECT AEDAT_STPO.AEDAT
-//            FROM STPO AEDAT_STPO
-//            WHERE AEDAT_STPO.MANDT = MAST.MANDT 
-//            AND AEDAT_STPO.STLNR= MAST.STLNR                
-//        ) 
-//    )
-//WHERE MAST.MANDT= :mandt
-//AND MAST.WERKS= '0001'
-//AND MAST.MATNR = :matnr
-//ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR
-//            ";
             var bomsql = @"
 SELECT 
     MAST.STLAN AS MAST_STLAN,
@@ -746,8 +559,8 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR";
             */
 
 
-            //            Export2Excel(@"C:\exact importeren artikelen\export\stuklijst-" + artikel.Code + ".xls", bomsql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", artikel.Code } });
-            var bomtable = QueryTable(bomsql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", artikel.Code } });
+//            Export2Excel(@"C:\exact importeren artikelen\export\stuklijst-" + artikel.MateriaalCode + ".xls", bomsql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", artikel.MateriaalCode } });
+            var bomtable = QueryTable(bomsql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", artikel.MateriaalCode } });
 
             Domain.Stuklijst stuklijst = null;
             foreach (DataRow bomrow in bomtable.Rows)
@@ -769,7 +582,7 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR";
                     stuklijst.StuklijstNaam = stuklijstnaam;
                     stuklijst.StuklijstTotaalAantal = -1;
 
-                    stuklijst.StuklijstDatum = ConvertSapDate(bomrow["STKO_DATUV"], "artikel:" + artikel.Code + " stuklijstcode:" + stuklijstcode);
+                    stuklijst.StuklijstDatum = ConvertSapDate(bomrow["STKO_DATUV"], "artikel:" + artikel.MateriaalCode + " stuklijstcode:" + stuklijstcode);
                     stuklijst.StuklijstTotaalAantal = Convert.ToDouble(bomrow["STKO_BMENG"]);
                 }
 
@@ -787,7 +600,7 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR";
                                 found += Convert.ToInt32(c.ToString());
                             }
                         }
-                        Output.Error("invalid pos-nr in arikel:" + artikel.Code + " value: " + posnr + " assuming:" + found);
+                        Output.Error("invalid pos-nr in arikel:" + artikel.MateriaalCode + " value: " + posnr + " assuming:" + found);
                     }
                     receptuurregel.Volgnummer = found;
                     receptuurregel.ReceptuurRegelAantal = Convert.ToDouble(bomrow["STPO_menge"]);
@@ -802,7 +615,7 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR";
                         }
                         else
                         {
-                            Output.Error("Recursive usage of article:" + matnr + " in samengesteld-artikel:" + artikel.Code);
+                            Output.Error("Recursive usage of article:" + matnr + " in samengesteld-artikel:" + artikel.MateriaalCode);
                         }
                     }
                     // geen ingredienten meenemen!
@@ -825,10 +638,10 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR";
             foreach(Domain.Stuklijst sl in artikel.Stuklijsten) {
                 double totaalaantal = 0;
                 foreach(Domain.StuklijstRegel slr in sl.StuklijstRegels) {
-                    double aantal = slr.ReceptuurRegelAantal * slr.Artikel.PrijsGewichtNetto;
+                    double aantal = slr.ReceptuurRegelAantal * slr.Artikel.ExactGewensteNettoGewicht;
                     totaalaantal += aantal;
                 }
-                double berekendaantal = sl.StuklijstTotaalAantal * artikel.VerkoopAantalNetto;
+                double berekendaantal = sl.StuklijstTotaalAantal * artikel.NettoGewicht;
                 double factortoegelaten =  0.001;    //  0.1%
                 if (
                     totaalaantal > (berekendaantal + (berekendaantal * factortoegelaten)) 
@@ -836,16 +649,11 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR";
                     totaalaantal < (berekendaantal - (berekendaantal * factortoegelaten))
                     )
                 {
-                    Output.Error("Ongeldig stuklijst totaal voor: " + artikel.Code + " berekend: " + totaalaantal + " verwacht: " + sl.StuklijstTotaalAantal + " x " + artikel.VerkoopAantalNetto + " = " + berekendaantal);
+                    Output.Error("Ongeldig stuklijst totaal voor: " + artikel.MateriaalCode + " berekend: " + totaalaantal + " verwacht: " + sl.StuklijstTotaalAantal + " x " + artikel.NettoGewicht + " = " + berekendaantal);
                 }
                 sl.StuklijstTotaalAantal = totaalaantal;
             }
             return artikel;
-        }
-
-        private void WriteError(string p)
-        {
-            throw new NotImplementedException();
         }
     }
 }
