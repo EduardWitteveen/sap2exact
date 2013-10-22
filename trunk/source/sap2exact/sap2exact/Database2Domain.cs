@@ -81,7 +81,8 @@ namespace sap2exact
             }
             else if (verpakkingtype == "KN")
             {
-                verpakkingtype = "kg nat";
+                Output.Error("kilogram nat!!");
+                verpakkingtype = "kg";
             }
             else if (verpakkingtype == "ST")
             {
@@ -450,7 +451,7 @@ namespace sap2exact
                 he.naarBruto = Convert.ToDouble(eenheidrow["BRGEW"]);
                 he.naarEenheid = Convert2VerpakkingsType(verpakkingrow["GEWEI"]);
 
-                if (he.vanEenheid != null)
+                if (he.vanEenheid != null && !artikel.HoeveelheidsEenheden.ContainsKey(he.vanEenheid))
                 {
                     artikel.HoeveelheidsEenheden.Add(he.vanEenheid, he);
                 }
