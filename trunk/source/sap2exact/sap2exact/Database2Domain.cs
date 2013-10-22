@@ -836,7 +836,7 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR";
                     totaalaantal < (berekendaantal - (berekendaantal * factortoegelaten))
                     )
                 {
-                    Output.Error("Ongeldig stuklijst totaal voor:" + artikel.Code + " verwacht: " + totaalaantal + " berekend:" + totaalaantal + " x " + artikel.VerkoopAantalNetto + " = " + berekendaantal);
+                    Output.Error("Ongeldig stuklijst totaal voor: " + artikel.Code + " berekend: " + totaalaantal + " verwacht: " + sl.StuklijstTotaalAantal + " x " + artikel.VerkoopAantalNetto + " = " + berekendaantal);
                 }
                 sl.StuklijstTotaalAantal = totaalaantal;
             }

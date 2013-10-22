@@ -19,7 +19,7 @@ namespace access2exact
             }
             public void Write(string message) {
                 var writer = errorlog.AppendText();
-                writer.WriteLine(message);
+                writer.WriteLine("[" + DateTime.Now.Ticks + "] " + message);
                 writer.Close();
             }
             
