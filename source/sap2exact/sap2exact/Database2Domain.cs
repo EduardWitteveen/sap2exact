@@ -67,43 +67,6 @@ namespace sap2exact
             return table;
         }
 
-        public string Convert2VerpakkingsType(object type)
-        {
-            string verpakkingtype = Convert.ToString(type);
-            if (type == "") return verpakkingtype;
-            if (verpakkingtype == "DS")
-            {
-                verpakkingtype = "doos";
-            }
-            else if (verpakkingtype == "KG")
-            {
-                verpakkingtype = "kg";
-            }
-            else if (verpakkingtype == "KN")
-            {
-                Output.Error("kilogram nat!!");
-                verpakkingtype = "kg";
-            }
-            else if (verpakkingtype == "ST")
-            {
-                verpakkingtype = "stuk";
-            }
-            else if (verpakkingtype == "CH")
-            {
-                verpakkingtype = "charge";
-            }
-            else if (verpakkingtype == "EEN")
-            {
-                verpakkingtype = "Eenmalige";
-            }
-            else
-            {
-                Output.Error("unknown eenheid:" + verpakkingtype);
-                verpakkingtype = null;
-            }
-            return verpakkingtype;
-        }
-
         public void Export2Excel(string name, string sql, Dictionary<string, object> parameters = null)
         {
             Output.Info("Exporting: " + name + "\n\t" + sql);
@@ -298,8 +261,7 @@ namespace sap2exact
             ";
             var meins = Convert.ToString(artikelrow["meins"]);
             var verpakkingrow = QueryRow(verpakkingsql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", matnr }, { ":meins", meins } });
-            //artikel.VerkoopGewichtEenheid = Convert.ToString(artikelrow["GEWEI"]);
-            artikel.BasishoeveelheidEenheid = Convert2VerpakkingsType(verpakkingrow["MEINH"]);
+            artikel.BasishoeveelheidEenheid = Convert.ToString(verpakkingrow["MEINH"]);
             artikel.NettoGewicht = Convert.ToDouble(artikelrow["NTGEW"]);
             artikel.BruttoGewicht = Convert.ToDouble(artikelrow["BRGEW"]);
             artikel.HoudbaarheidInDagen = Convert.ToInt32(artikelrow["MHDHB"]);            
@@ -375,6 +337,9 @@ namespace sap2exact
                 // TODO: double check!!
                 artikel.KostPrijs = artikel.KostPrijs / artikel.NettoGewicht;
                 artikel.VerkoopPrijs = 0;
+
+                artikel.Gewichtseenheid = Convert.ToString(artikelrow["GEWEI"]);
+                /*
                 if (artikel.GetType() == typeof(Domain.VerpakkingsArtikel))
                 {
                     // verpakkingen in stuks, de rest in kg
@@ -384,6 +349,7 @@ namespace sap2exact
                 {
                     artikel.Gewichtseenheid = "kg";
                 }
+                */
             }
             #endregion artikel price            
 
@@ -445,16 +411,11 @@ namespace sap2exact
             foreach (DataRow eenheidrow in eenheidtable.Rows)
             {
                 Domain.HoeveelheidsEenheid he = new Domain.HoeveelheidsEenheid();
-                he.vanEenheid = Convert2VerpakkingsType(eenheidrow["MEINH"]); 
-                he.vanAantal = Convert.ToDouble(eenheidrow["UMREN"]);
-                he.naarAantal = Convert.ToDouble(eenheidrow["UMREZ"]);
-                he.naarBruto = Convert.ToDouble(eenheidrow["BRGEW"]);
-                he.naarEenheid = Convert2VerpakkingsType(verpakkingrow["GEWEI"]);
-
-                if (he.vanEenheid != null && !artikel.HoeveelheidsEenheden.ContainsKey(he.vanEenheid))
-                {
-                    artikel.HoeveelheidsEenheden.Add(he.vanEenheid, he);
-                }
+                he.naarEenheid = Convert.ToString(eenheidrow["MEINH"]).ToUpper();
+                he.vanEenheid = Convert.ToString(verpakkingrow["GEWEI"]).ToUpper();
+                he.factor = Convert.ToDouble(eenheidrow["UMREZ"]) / Convert.ToDouble(eenheidrow["UMREN"]);
+    
+                artikel.HoeveelheidsEenheden.Add(he);
             }
 
             #endregion artikel eenheid
@@ -499,6 +460,7 @@ SELECT
     STAS.STVKN AS STAS_STVKN,
     STPO.AEDAT AS STPO_AEDAT,
     STPO.MENGE AS STPO_MENGE,
+    STPO.MEINS AS STPO_MEINS,
     STPO.POSNR AS STPO_POSNR,
     STPO.IDNRK AS STPO_IDNRK,
     '------',
@@ -604,8 +566,6 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR";
                         Output.Error("invalid pos-nr in arikel:" + artikel.MateriaalCode + " value: " + posnr + " assuming:" + found);
                     }
                     receptuurregel.Volgnummer = found;
-                    receptuurregel.ReceptuurRegelAantal = Convert.ToDouble(bomrow["STPO_menge"]);
-
                     Domain.BaseArtikel childartikel = data.Retrieve(matnr);
                     if (childartikel == null)
                     {
@@ -619,12 +579,53 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR";
                             Output.Error("Recursive usage of article:" + matnr + " in samengesteld-artikel:" + artikel.MateriaalCode);
                         }
                     }
+                    receptuurregel.ReceptuurRegelAantal = Convert.ToDouble(bomrow["STPO_menge"]);
+                    receptuurregel.ReceptuurEenheid = Convert.ToString(bomrow["STPO_meins"]);
+                    receptuurregel.ReceptuurEenheidFactor =
+                        childartikel.ConversieFactor(childartikel.Gewichtseenheid, receptuurregel.ReceptuurEenheid);
+                    receptuurregel.ReceptuurEenheidConversie =
+                        "van:" + childartikel.Gewichtseenheid + " naar:" + receptuurregel.ReceptuurEenheidFactor + " factor:" + receptuurregel.ReceptuurEenheidFactor;
+
                     // geen ingredienten meenemen!
                     if (childartikel.GetType() != typeof(Domain.IngredientArtikel))
                     {
-                        receptuurregel.Artikel = childartikel;
-                        //TODO: HACK HACK NET LINE!!!!
-                        stuklijst.StuklijstRegelsAdd(receptuurregel);
+                        if (receptuurregel.ReceptuurEenheidFactor > 1)
+                        {
+                            receptuurregel.Artikel = childartikel;
+                            stuklijst.StuklijstRegelsAdd(receptuurregel);
+                            stuklijst.StuklijstRegelsAdd(Domain.AfvalArtikel.CreateStuklijstRegel(receptuurregel, receptuurregel.ReceptuurEenheidFactor));
+                        }
+                        else if (receptuurregel.ReceptuurEenheidFactor < 1)
+                        {
+                            // Dit moet wel een KN zijn, dus spoelwater ontbreekt hierin!
+                            // maak hiervoor een PhantomArikel aan
+                            if (receptuurregel.ReceptuurEenheid == "KN")
+                            {
+                                var phantomartikel = new Domain.PhantomArtikel(childartikel, receptuurregel.ReceptuurEenheidFactor);
+                                if (data.AlleArtikelen.ContainsKey(phantomartikel.MateriaalCode))
+                                {
+                                    Domain.PhantomArtikel pa = (Domain.PhantomArtikel)data.AlleArtikelen[phantomartikel.MateriaalCode];
+                                    phantomartikel = pa;
+                                }
+                                else
+                                {
+                                    data.Add(phantomartikel);
+                                }
+                                receptuurregel.Artikel = phantomartikel;
+                                stuklijst.StuklijstRegelsAdd(receptuurregel);
+                            }
+                            else
+                            {
+                                Output.Error("Factor fout in artikel:" + artikel.MateriaalCode + " voor: " + childartikel.MateriaalCode + ", we negeren de factor:" + receptuurregel.ReceptuurEenheidFactor);
+                                receptuurregel.Artikel = childartikel;
+                                stuklijst.StuklijstRegelsAdd(receptuurregel);
+                            }
+                        }
+                        else
+                        {
+                            receptuurregel.Artikel = childartikel;
+                            stuklijst.StuklijstRegelsAdd(receptuurregel);
+                        }
                     }
                 }
             }

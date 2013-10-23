@@ -46,7 +46,8 @@ namespace sap2exact.Domain
             if(artikel.GetType() == typeof(EindArtikel)) {
                 EindArtikelen.Add(artikel.MateriaalCode, (EindArtikel)artikel);
             }
-            else if(artikel.GetType() == typeof(ReceptuurArtikel)) {
+            else if (artikel.GetType() == typeof(ReceptuurArtikel) || artikel.GetType() == typeof(PhantomArtikel))
+            {
                 ReceptuurArtikelen.Add(artikel.MateriaalCode, (ReceptuurArtikel)artikel);
             }
             else if(artikel.GetType() == typeof(VerpakkingsArtikel)) {

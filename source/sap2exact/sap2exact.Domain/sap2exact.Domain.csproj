@@ -39,8 +39,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AfvalArtikel.cs" />
     <Compile Include="BaseArtikel.cs" />
     <Compile Include="BaseSamengesteldArtikel.cs" />
+    <Compile Include="PhantomArtikel.cs" />
     <Compile Include="EindArtikel.cs" />
     <Compile Include="ExportData.cs" />
     <Compile Include="GrondstofArtikel.cs" />
@@ -51,6 +53,7 @@
     <Compile Include="StuklijstRegel.cs" />
     <Compile Include="VerpakkingsArtikel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="WeekWater.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ExportData.hbm.xml">

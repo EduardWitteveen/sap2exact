@@ -13,11 +13,21 @@ namespace sap2exact
         XmlDocument xmldocument;
         XmlElement items;
 
-        const string OPVULLING = "T02_______";
-        static string CreateSapCode(string nummer)
+        const string ARTIKEL_CODE_OPVULLING = "T7_______";
+        const int ARTIKEL_CODE_LENGTE = 12;
+        //const string OPVULLING = "VL_______";
+
+        static string CreateSapCode(Domain.BaseArtikel artikel)
         {
-            //while (nummer[0] == '0') nummer = nummer.Substring(1);
-            return OPVULLING.Substring(0, 12 - nummer.Trim().Length) + nummer.Trim();
+            if(artikel.GetType() == typeof(Domain.WeekWater)) {
+                return artikel.MateriaalCode;
+            }
+            string code = artikel.MateriaalCode.Trim();
+            int len = code.Length;
+            code = ARTIKEL_CODE_OPVULLING.Substring(0, ARTIKEL_CODE_LENGTE - len) + code;
+            System.Diagnostics.Debug.Assert(code.Length == ARTIKEL_CODE_LENGTE);
+
+            return code;
         }
 
         public Domain2Xml()
@@ -47,8 +57,8 @@ namespace sap2exact
             System.Diagnostics.Debug.WriteLine("artikel:" + artikel.MateriaalCode + " (" + artikel.GetType().Name + ")");
 
             var item = xmldocument.CreateElement("Item");
-            item.SetAttribute("code", CreateSapCode(artikel.MateriaalCode));
-            var description = xmldocument.CreateElement("ArtikelOmschrijving");
+            item.SetAttribute("code", CreateSapCode(artikel));
+            var description = xmldocument.CreateElement("Description");
             description.AppendChild(xmldocument.CreateTextNode(artikel.ArtikelOmschrijving));
             item.AppendChild(description);
 
@@ -101,7 +111,9 @@ namespace sap2exact
             var isassembleditem = xmldocument.CreateElement("IsAssembledItem");
             // 1 if type = samengesteld
             //isassembleditem.AppendChild(xmldocument.CreateTextNode(typeof(Domain.BaseSamengesteldArtikel).IsAssignableFrom(artikel.GetType()) ? "1" : "0"));
-            string isAssembled = (artikel.GetType() == typeof(Domain.EindArtikel) ||  artikel.GetType() == typeof(Domain.ReceptuurArtikel))  ? "1" : "0";
+            string isAssembled = (artikel.GetType() == typeof(Domain.EindArtikel) 
+                || artikel.GetType() == typeof(Domain.ReceptuurArtikel) 
+                || artikel.GetType() == typeof(Domain.PhantomArtikel)) ? "1" : "0";
             isassembleditem.AppendChild(xmldocument.CreateTextNode(isAssembled));
             item.AppendChild(isassembleditem);
 
@@ -121,7 +133,7 @@ namespace sap2exact
             var glrevenue = xmldocument.CreateElement("GLRevenue");
             //glrevenue.SetAttribute("code", "     86200");
             glrevenue.SetAttribute("code", "86200");
-            var gldescription = xmldocument.CreateElement("ArtikelOmschrijving");
+            var gldescription = xmldocument.CreateElement("Description");
             gldescription.AppendChild(xmldocument.CreateTextNode("SAP-IMPORT"));
             glrevenue.AppendChild(gldescription);
             item.AppendChild(glrevenue);
@@ -129,7 +141,7 @@ namespace sap2exact
             var glcosts = xmldocument.CreateElement("GLCosts");
             //glcosts.SetAttribute("code", "     76200");
             glcosts.SetAttribute("code", "76200");
-            gldescription = xmldocument.CreateElement("ArtikelOmschrijving");
+            gldescription = xmldocument.CreateElement("Description");
             gldescription.AppendChild(xmldocument.CreateTextNode("SAP-IMPORT"));
             glcosts.AppendChild(gldescription);
             item.AppendChild(glcosts);
@@ -137,7 +149,7 @@ namespace sap2exact
             var glpurchase = xmldocument.CreateElement("GLPurchase");
             //glpurchase.SetAttribute("code", "     30620");
             glpurchase.SetAttribute("code", "30620");
-            gldescription = xmldocument.CreateElement("ArtikelOmschrijving");
+            gldescription = xmldocument.CreateElement("Description");
             gldescription.AppendChild(xmldocument.CreateTextNode("SAP-IMPORT"));
             glpurchase.AppendChild(gldescription);
             item.AppendChild(glpurchase);
@@ -145,7 +157,7 @@ namespace sap2exact
             var glaccountdiscount = xmldocument.CreateElement("GLAccountDiscount");
             //glaccountdiscount.SetAttribute("code", "     81020");
             glaccountdiscount.SetAttribute("code", "81020");
-            gldescription = xmldocument.CreateElement("ArtikelOmschrijving");
+            gldescription = xmldocument.CreateElement("Description");
             gldescription.AppendChild(xmldocument.CreateTextNode("SAP-IMPORT"));
             glaccountdiscount.AppendChild(gldescription);
             item.AppendChild(glaccountdiscount);
@@ -227,10 +239,10 @@ namespace sap2exact
                 foreach (Domain.Stuklijst stuklijst in artikel.Stuklijsten)
                 {
                     var bom = xmldocument.CreateElement("BOM");
-                    bom.SetAttribute("code", CreateSapCode(artikel.MateriaalCode));
+                    bom.SetAttribute("code", CreateSapCode(artikel));
                     bom.SetAttribute("versionnumber", Convert.ToString(stuklijst.StuklijstVersion));
 
-                    var description = xmldocument.CreateElement("ArtikelOmschrijving");
+                    var description = xmldocument.CreateElement("Description");
                     var stuklijstnaam = stuklijst.StuklijstNaam;
                     if (stuklijstnaam.Length == 0)
                     {
@@ -259,12 +271,23 @@ namespace sap2exact
                         bomline.SetAttribute("type", "I");
                         bomline.SetAttribute("sequencenumber", receptuurregel.Volgnummer.ToString());
                         var bomitem = xmldocument.CreateElement("Item");
-                        bomitem.SetAttribute("code", CreateSapCode(receptuurregel.Artikel.MateriaalCode));
-                        var bomdescription = xmldocument.CreateElement("ArtikelOmschrijving");
+                        bomitem.SetAttribute("code", CreateSapCode(receptuurregel.Artikel));
+                        var bomdescription = xmldocument.CreateElement("Description");
 
                         bomdescription.AppendChild(xmldocument.CreateTextNode(receptuurregel.Artikel.ArtikelOmschrijving));
                         bomitem.AppendChild(bomdescription);
                         bomline.AppendChild(bomitem);
+
+                        var condition = xmldocument.CreateElement("Condition");
+                        string conditiontext = "N";
+                        if(receptuurregel.Artikel.GetType() == typeof(Domain.PhantomArtikel) ) {
+                            conditiontext = "F";
+                        }
+                        else if(receptuurregel.Artikel.GetType() == typeof(Domain.AfvalArtikel) ) {
+                            conditiontext = "W";
+                        }
+                        condition.AppendChild(xmldocument.CreateTextNode( conditiontext ));
+                        bomline.AppendChild(condition);
 
                         var backflush = xmldocument.CreateElement("BackFlush");
                         backflush.AppendChild(xmldocument.CreateTextNode("0"));
@@ -327,7 +350,7 @@ namespace sap2exact
 
             var unit = xmldocument.CreateElement("Unit");
             //unit.SetAttribute("unit", artikel.BasishoeveelheidEenheid);
-            unit.SetAttribute("unit", artikel.BasishoeveelheidEenheid);            
+            unit.SetAttribute("unit", Convert2VerpakkingsType(artikel, artikel.BasishoeveelheidEenheid));            
             unit.SetAttribute("type", "O");
             unit.SetAttribute("active", "1");
             purchase.AppendChild(unit);
@@ -363,6 +386,57 @@ namespace sap2exact
 
             return item;
         }
+
+        public string Convert2VerpakkingsType(Domain.BaseArtikel artikel, string verpakkingstype)
+        {
+            string verpakkingtype = Convert.ToString(verpakkingstype);
+
+            if (verpakkingtype == "DS")
+            {
+                verpakkingtype = "doos";
+            }
+            else if (verpakkingtype == "KG")
+            {
+                verpakkingtype = "kg";
+            }
+            else if (verpakkingtype == "ST")
+            {
+                verpakkingtype = "stuk";
+            }
+            else if (verpakkingtype == "ZAK")
+            {
+                verpakkingtype = "zak";
+            }
+            /*
+            else if (verpakkingtype == "ST")
+            {
+                verpakkingtype = "stuk";
+            }
+             */
+            /*
+            else if (verpakkingtype == "KN")
+            {
+                Output.Error("kilogram nat!!");
+                verpakkingtype = "kg";
+            }
+
+            else if (verpakkingtype == "CH")
+            {
+                verpakkingtype = "charge";
+            }
+            else if (verpakkingtype == "EEN")
+            {
+                verpakkingtype = "Eenmalige";
+            }
+            */
+            else
+            {
+                Output.Error("unknown eenheid:" + verpakkingtype);
+                throw new NotImplementedException("no support voor verpakkingstype: " + verpakkingtype);
+            }
+            return verpakkingtype;
+        }
+
 
         void ExportArtikelen(Domain.ExportData data)
         {
@@ -461,6 +535,11 @@ namespace sap2exact
                 iccode = "30";
                 icdescription = "Halffabrikaten";
             }
+            else if (artikel.GetType() == typeof(Domain.PhantomArtikel))
+            {
+                iccode = "30";
+                icdescription = "Halffabrikaten";
+            }
             else if (artikel.GetType() == typeof(Domain.EindArtikel))
             {
                 iccode = "40";
@@ -471,7 +550,7 @@ namespace sap2exact
             var itemcategory = xmldocument.CreateElement("ItemCategory");
             itemcategory.SetAttribute("number", "3");
             itemcategory.SetAttribute("code", iccode);
-            var description = xmldocument.CreateElement("ArtikelOmschrijving");
+            var description = xmldocument.CreateElement("Description");
             description.AppendChild(xmldocument.CreateTextNode(icdescription));
             itemcategory.AppendChild(description);
             item.AppendChild(itemcategory);
@@ -481,7 +560,7 @@ namespace sap2exact
                 itemcategory = xmldocument.CreateElement("ItemCategory");
                 itemcategory.SetAttribute("number", "6");
                 itemcategory.SetAttribute("code", "30");
-                description = xmldocument.CreateElement("ArtikelOmschrijving");
+                description = xmldocument.CreateElement("Description");
                 description.AppendChild(xmldocument.CreateTextNode("Productie-artikel Vlaardingen"));
                 itemcategory.AppendChild(description);
                 item.AppendChild(itemcategory);
@@ -489,7 +568,7 @@ namespace sap2exact
                 itemcategory = xmldocument.CreateElement("ItemCategory");
                 itemcategory.SetAttribute("number", "7");
                 itemcategory.SetAttribute("code", "BULK");
-                description = xmldocument.CreateElement("ArtikelOmschrijving");
+                description = xmldocument.CreateElement("Description");
                 description.AppendChild(xmldocument.CreateTextNode("Bulkproduct"));
                 itemcategory.AppendChild(description);
                 item.AppendChild(itemcategory);
