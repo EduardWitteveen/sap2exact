@@ -13,7 +13,7 @@ namespace sap2exact.Domain
         public virtual string ArtikelOmschrijving { get; set; }
         public virtual Dictionary<int, string> ArtikelOmschrijvingen { get; set; }
         public virtual string BasishoeveelheidEenheid { get; set; }
-        public virtual Dictionary<string, HoeveelheidsEenheid> HoeveelheidsEenheden { get; set; }
+        public virtual List<HoeveelheidsEenheid> HoeveelheidsEenheden { get; set; }
 
         public virtual int ExactGewensteBelastingCategorie { get; set; }
         public virtual double ExactGewensteNettoGewicht { get; set; }
@@ -35,7 +35,30 @@ namespace sap2exact.Domain
             : base()
         {
             ArtikelOmschrijvingen = new Dictionary<int, string>();
-            HoeveelheidsEenheden = new Dictionary<string, HoeveelheidsEenheid>();
+            HoeveelheidsEenheden = new List<HoeveelheidsEenheid>();
+        }
+
+        public double ConversieFactor(string van, string naar)
+        {
+            // eerst zoeken, wellicht conversie met afval ofsu
+            foreach (HoeveelheidsEenheid eenheid in HoeveelheidsEenheden)
+            {
+                if (eenheid.vanEenheid == van && eenheid.naarEenheid == naar)
+                {
+                    if (eenheid.factor != 1)
+                    {
+                        System.Diagnostics.Debug.WriteLine("conversie factor van: " + van + " naar: " + naar + " factor:" + eenheid.factor);
+                    }
+                    return eenheid.factor;
+                }
+            }
+            // als we niet gaan converteren, dan maar zo
+            if (van == naar)
+            {
+                System.Diagnostics.Debug.WriteLine("conversie factor van: " + van + " naar: " + naar + " hard gezet op : 1.0");
+                return 1;
+            }
+            throw new NotImplementedException("kon eenheid niet converteren voor artikel:" + MateriaalCode + " van: " + van  + " naar: " + naar);
         }
     }
 }

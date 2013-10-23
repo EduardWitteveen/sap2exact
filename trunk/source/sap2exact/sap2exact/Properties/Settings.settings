@@ -1,5 +1,5 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="access2exact.Properties" GeneratedClassName="Settings">
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="sap2exact.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
     <Setting Name="connection_string_access" Type="(Connection string)" Scope="Application">
@@ -11,14 +11,14 @@
       <Value Profile="(Default)">Provider=Microsoft.ACE.OLEDB.12.0;Data Source="C:\exact importeren artikelen\source\access\conversie.accdb"</Value>
     </Setting>
     <Setting Name="export_xml" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">C:\exact importeren artikelen\test\access2exact.xml</Value>
+      <Value Profile="(Default)">C:\exact importeren artikelen\export\access2exact.xml</Value>
     </Setting>
     <Setting Name="connection_string_sap" Type="(Connection string)" Scope="Application">
       <DesignTimeValue Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
 &lt;SerializableConnectionString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
-  &lt;ConnectionString&gt;DATA SOURCE=dmc04;INITIAL CATALOG=dev;USER ID=SAPDEV;PASSWORD=SAP&lt;/ConnectionString&gt;
+  &lt;ConnectionString&gt;DATA SOURCE=dmc08;INITIAL CATALOG=prd;USER ID=SAPPRD;PASSWORD=SAP&lt;/ConnectionString&gt;
 &lt;/SerializableConnectionString&gt;</DesignTimeValue>
-      <Value Profile="(Default)">DATA SOURCE=dmc04;INITIAL CATALOG=dev;USER ID=SAPDEV;PASSWORD=SAP</Value>
+      <Value Profile="(Default)">DATA SOURCE=dmc08;INITIAL CATALOG=prd;USER ID=SAPPRD;PASSWORD=SAP</Value>
     </Setting>
   </Settings>
 </SettingsFile>

@@ -36,7 +36,7 @@ namespace sap2exact.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("C:\\exact importeren artikelen\\test\\access2exact.xml")]
+        [global::System.Configuration.DefaultSettingValueAttribute("C:\\exact importeren artikelen\\export\\access2exact.xml")]
         public string export_xml {
             get {
                 return ((string)(this["export_xml"]));
@@ -46,7 +46,7 @@ namespace sap2exact.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("DATA SOURCE=dmc04;INITIAL CATALOG=dev;USER ID=SAPDEV;PASSWORD=SAP")]
+        [global::System.Configuration.DefaultSettingValueAttribute("DATA SOURCE=dmc08;INITIAL CATALOG=prd;USER ID=SAPPRD;PASSWORD=SAP")]
         public string connection_string_sap {
             get {
                 return ((string)(this["connection_string_sap"]));

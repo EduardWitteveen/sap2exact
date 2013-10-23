@@ -21,6 +21,7 @@ namespace sap2exact.Domain
 
         public void StuklijstRegelsAdd(StuklijstRegel receptuurregel)
         {
+            /*
             for (int i = 0; i < StuklijstRegels.Count; i++)
             {
                 if (StuklijstRegels[i].Volgnummer == 0)
@@ -44,7 +45,6 @@ namespace sap2exact.Domain
                     }
                 }
             }
-            // HACK HACK: dubbele artikelcode's
             for(int i = 0;i < StuklijstRegels.Count; i++) {
                 if(StuklijstRegels[i].Artikel.MateriaalCode == receptuurregel.Artikel.MateriaalCode) {
                     StuklijstRegels[i] = receptuurregel;
@@ -52,6 +52,7 @@ namespace sap2exact.Domain
                     return;
                 }
             }
+            */
             StuklijstRegels.Add(receptuurregel);
         }
     }
