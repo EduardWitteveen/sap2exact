@@ -13,7 +13,7 @@ namespace sap2exact
         XmlDocument xmldocument;
         XmlElement items;
 
-        const string ARTIKEL_CODE_OPVULLING = "T7_______";
+        const string ARTIKEL_CODE_OPVULLING = "T8_______";
         const int ARTIKEL_CODE_LENGTE = 12;
         //const string OPVULLING = "VL_______";
 
@@ -75,7 +75,17 @@ namespace sap2exact
                 multidescriptions.AppendChild(multidescription);
             }
             item.AppendChild(multidescriptions);
-
+            ////////////////////////////////////////////////////////
+            if (artikel.GetType() == typeof(Domain.EindArtikel))
+            {
+                var assortment = xmldocument.CreateElement("Assortment");
+                assortment.SetAttribute("number", "66" + artikel.MateriaalCode.Substring(0, 1) + "0");
+                var asdescription = xmldocument.CreateElement("Description");
+                asdescription.AppendChild(xmldocument.CreateTextNode("Artikelgroep"));
+                assortment.AppendChild(asdescription);
+                AddGlStuff(assortment,artikel);
+                item.AppendChild(assortment);                
+            }
             ////////////////////////////////////////////////////////            
             var availability = xmldocument.CreateElement("Availability");
             var datestart = xmldocument.CreateElement("DateStart");
@@ -130,6 +140,36 @@ namespace sap2exact
             item.AppendChild(isoutsourceditem);
              */
             //////////////////////////////////////////////////////////
+            AddGlStuff(item, artikel);
+
+
+            //////////////////////////////////////////////////////////
+            // sales feest
+            item.AppendChild(CreateXmlSalesElement(artikel));
+
+            /////////////////////////////////////////////////////////
+            var costs = xmldocument.CreateElement("Costs");
+            var price = xmldocument.CreateElement("Price");
+            var currency = xmldocument.CreateElement("Currency");
+            currency.SetAttribute("code", "EUR");
+            price.AppendChild(currency);
+            var value= xmldocument.CreateElement("Value");
+            value.AppendChild(xmldocument.CreateTextNode(Convert.ToString(artikel.KostPrijs)));
+            price.AppendChild(value);
+            costs.AppendChild(price);
+            item.AppendChild(costs);
+
+
+            var dimension = xmldocument.CreateElement("Dimension");
+            var weightnet = xmldocument.CreateElement("WeightNet");
+            weightnet.AppendChild(xmldocument.CreateTextNode(Convert.ToString(artikel.ExactGewensteNettoGewicht)));
+            dimension.AppendChild(weightnet);
+            item.AppendChild(dimension);
+            return item;
+        }
+
+        private void AddGlStuff(XmlElement item, Domain.BaseArtikel artikel)
+        {
             var glrevenue = xmldocument.CreateElement("GLRevenue");
             //glrevenue.SetAttribute("code", "     86200");
             glrevenue.SetAttribute("code", "86200");
@@ -161,31 +201,6 @@ namespace sap2exact
             gldescription.AppendChild(xmldocument.CreateTextNode("SAP-IMPORT"));
             glaccountdiscount.AppendChild(gldescription);
             item.AppendChild(glaccountdiscount);
-
-            //////////////////////////////////////////////////////////
-            // sales feest
-            item.AppendChild(CreateXmlSalesElement(artikel));
-
-            /////////////////////////////////////////////////////////
-            var costs = xmldocument.CreateElement("Costs");
-            var price = xmldocument.CreateElement("Price");
-            var currency = xmldocument.CreateElement("Currency");
-            currency.SetAttribute("code", "EUR");
-            price.AppendChild(currency);
-            var value= xmldocument.CreateElement("Value");
-            value.AppendChild(xmldocument.CreateTextNode(Convert.ToString(artikel.KostPrijs)));
-            price.AppendChild(value);
-            costs.AppendChild(price);
-            item.AppendChild(costs);
-
-
-            var dimension = xmldocument.CreateElement("Dimension");
-            var weightnet = xmldocument.CreateElement("WeightNet");
-            weightnet.AppendChild(xmldocument.CreateTextNode(Convert.ToString(artikel.ExactGewensteNettoGewicht)));
-            dimension.AppendChild(weightnet);
-            item.AppendChild(dimension);
-
-            return item;
         }
 
         private XmlNode CreateXmlSalesElement(Domain.BaseArtikel artikel)
@@ -198,7 +213,7 @@ namespace sap2exact
                 currency.SetAttribute("code", "EUR");
                 price.AppendChild(currency);
                 var value = xmldocument.CreateElement("Value");
-                value.AppendChild(xmldocument.CreateTextNode(Convert.ToString(artikel.VerkoopPrijs)));
+                value.AppendChild(xmldocument.CreateTextNode("0.00"));
                 price.AppendChild(value);
                 var vat = xmldocument.CreateElement("VAT");
                 vat.SetAttribute("code", Convert.ToString(artikel.ExactGewensteBelastingCategorie));
@@ -211,7 +226,7 @@ namespace sap2exact
             var unit = xmldocument.CreateElement("Unit");
             //unit.SetAttribute("unit", artikel.Gewichtseenheid);
             //unit.SetAttribute("unit", artikel.BasishoeveelheidEenheid);
-            unit.SetAttribute("unit", artikel.Gewichtseenheid);
+            unit.SetAttribute("unit", Convert2VerpakkingsType(artikel));
             unit.SetAttribute("type", "W");
             unit.SetAttribute("active", "1");
             sales.AppendChild(unit);
@@ -350,7 +365,7 @@ namespace sap2exact
 
             var unit = xmldocument.CreateElement("Unit");
             //unit.SetAttribute("unit", artikel.BasishoeveelheidEenheid);
-            unit.SetAttribute("unit", Convert2VerpakkingsType(artikel, artikel.BasishoeveelheidEenheid));            
+            unit.SetAttribute("unit", Convert2VerpakkingsType(artikel));            
             unit.SetAttribute("type", "O");
             unit.SetAttribute("active", "1");
             purchase.AppendChild(unit);
@@ -387,62 +402,41 @@ namespace sap2exact
             return item;
         }
 
-        public string Convert2VerpakkingsType(Domain.BaseArtikel artikel, string verpakkingstype)
+        public string Convert2VerpakkingsType(Domain.BaseArtikel artikel)
         {
-            string verpakkingtype = Convert.ToString(verpakkingstype);
-
-            if (verpakkingtype == "DS")
+            string verpakkingstype;
+            // SAP2EXACT: aantalconversie
+            if (artikel.GetType() == typeof(Domain.VerpakkingsArtikel))
             {
-                verpakkingtype = "doos";
+                verpakkingstype = artikel.BasishoeveelheidEenheid;
             }
-            else if (verpakkingtype == "KG")
-            {
-                verpakkingtype = "kg";
-            }
-            else if (verpakkingtype == "ST")
-            {
-                verpakkingtype = "stuk";
-            }
-            else if (verpakkingtype == "ZAK")
-            {
-                verpakkingtype = "zak";
-            }
-            else if (verpakkingtype == "EM")
-            {
-                verpakkingtype = "emmer";
-            }
-            else if (verpakkingtype == "BB")
-            {
-                verpakkingtype = "kg";
-            }
-            /*
-            else if (verpakkingtype == "ST")
-            {
-                verpakkingtype = "stuk";
-            }
-             */
-            /*
-            else if (verpakkingtype == "KN")
-            {
-                Output.Error("kilogram nat!!");
-                verpakkingtype = "kg";
-            }
-
-            else if (verpakkingtype == "CH")
-            {
-                verpakkingtype = "charge";
-            }
-            else if (verpakkingtype == "EEN")
-            {
-                verpakkingtype = "Eenmalige";
-            }
-            */
             else
             {
-                Output.Error("unknown eenheid:" + verpakkingtype);
-                throw new NotImplementedException("no support voor verpakkingstype: " + verpakkingtype);
+                verpakkingstype = artikel.Gewichtseenheid;
             }
-            return verpakkingtype;
+            ////////////////////////////////////////////////////
+            if (verpakkingstype == "DS")
+            {
+                verpakkingstype = "doos";
+            }
+            else if (verpakkingstype == "KG")
+            {
+                verpakkingstype = "kg";
+            }
+            else if (verpakkingstype == "ST")
+            {
+                verpakkingstype = "stuk";
+            }
+            else if (verpakkingstype == "ZAK")
+            {
+                verpakkingstype = "zak";
+            }
+            else
+            {
+                Output.Error("unknown eenheid:" + verpakkingstype);
+                throw new NotImplementedException("no support voor verpakkingstype: " + verpakkingstype);
+            }
+            return verpakkingstype;
         }
 
 

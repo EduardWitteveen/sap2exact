@@ -333,23 +333,16 @@ namespace sap2exact
                     artikel.KostPrijs = 0.0;
                     Output.Error("GEEN PRIJS VOOR:" + matnr);
                 }
-                // Fix de niet 1 problemen:
-                // TODO: double check!!
-                artikel.KostPrijs = artikel.KostPrijs / artikel.NettoGewicht;
-                artikel.VerkoopPrijs = 0;
-
-                artikel.Gewichtseenheid = Convert.ToString(artikelrow["GEWEI"]);
-                /*
+                // SAP2EXACT: aantalconversie
                 if (artikel.GetType() == typeof(Domain.VerpakkingsArtikel))
                 {
-                    // verpakkingen in stuks, de rest in kg
-                    artikel.Gewichtseenheid = "stuks";
+                    artikel.KostPrijs = artikel.KostPrijs / artikel.NettoGewicht;
                 }
                 else
                 {
-                    artikel.Gewichtseenheid = "kg";
+                    artikel.KostPrijs = artikel.KostPrijs / artikel.NettoGewicht;
                 }
-                */
+                artikel.Gewichtseenheid = Convert.ToString(artikelrow["GEWEI"]);
             }
             #endregion artikel price            
 
@@ -581,9 +574,11 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR";
                     }
                     receptuurregel.ReceptuurRegelAantal = Convert.ToDouble(bomrow["STPO_menge"]);
                     receptuurregel.ReceptuurEenheid = Convert.ToString(bomrow["STPO_meins"]);
-                    receptuurregel.ReceptuurEenheidFactor =
+
+                    // SAP2EXACT: aantalconversie
+                    receptuurregel.ReceptuurEenheidFactor = 
                         childartikel.ConversieFactor(childartikel.Gewichtseenheid, receptuurregel.ReceptuurEenheid);
-                    receptuurregel.ReceptuurEenheidConversie =
+                    receptuurregel.ReceptuurEenheidConversie = 
                         "van:" + childartikel.Gewichtseenheid + " naar:" + receptuurregel.ReceptuurEenheidFactor + " factor:" + receptuurregel.ReceptuurEenheidFactor;
 
                     // geen ingredienten meenemen!
@@ -640,8 +635,11 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR";
             foreach(Domain.Stuklijst sl in artikel.Stuklijsten) {
                 double totaalaantal = 0;
                 foreach(Domain.StuklijstRegel slr in sl.StuklijstRegels) {
-                    double aantal = slr.ReceptuurRegelAantal * slr.Artikel.ExactGewensteNettoGewicht;
-                    totaalaantal += aantal;
+                    if (slr.Artikel.GetType() != typeof(Domain.AfvalArtikel))
+                    {
+                        double aantal = slr.ReceptuurRegelAantal * slr.Artikel.ExactGewensteNettoGewicht;
+                        totaalaantal += aantal;
+                    }
                 }
                 double berekendaantal = sl.StuklijstTotaalAantal * artikel.NettoGewicht;
                 double factortoegelaten =  0.001;    //  0.1%
@@ -654,6 +652,26 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR";
                     Output.Error("Ongeldig stuklijst totaal voor: " + artikel.MateriaalCode + " berekend: " + totaalaantal + " verwacht: " + sl.StuklijstTotaalAantal + " x " + artikel.NettoGewicht + " = " + berekendaantal);
                 }
                 sl.StuklijstTotaalAantal = totaalaantal;
+                
+                // ook nog een goed nummer geven.....
+                int versienummer = 1;
+                do
+                {
+                    foreach (Domain.Stuklijst slvergelijk in artikel.Stuklijsten)
+                    {
+                        if (slvergelijk != sl)
+                        {
+                            if (versienummer == slvergelijk.StuklijstVersion)
+                            {
+                                versienummer++;
+                                continue;
+                            }
+                        }
+                    }
+                    sl.StuklijstVersion = versienummer;
+                    break;
+                }
+                while(true);
             }
             return artikel;
         }
