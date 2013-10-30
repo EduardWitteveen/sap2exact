@@ -407,6 +407,14 @@ namespace sap2exact
             {
                 verpakkingtype = "zak";
             }
+            else if (verpakkingtype == "EM")
+            {
+                verpakkingtype = "emmer";
+            }
+            else if (verpakkingtype == "BB")
+            {
+                verpakkingtype = "kg";
+            }
             /*
             else if (verpakkingtype == "ST")
             {
