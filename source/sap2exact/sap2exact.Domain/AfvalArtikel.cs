@@ -26,7 +26,7 @@ namespace sap2exact.Domain
             this.NettoGewicht = ga.NettoGewicht;
             this.Stuklijsten = ga.Stuklijsten;
             this.TimeStamp = ga.TimeStamp;
-            this.VerkoopPrijs = ga.VerkoopPrijs;
+            //this.VerkoopPrijs = ga.VerkoopPrijs;
         }
 
         public static StuklijstRegel CreateStuklijstRegel(StuklijstRegel receptuurregel, double factor)

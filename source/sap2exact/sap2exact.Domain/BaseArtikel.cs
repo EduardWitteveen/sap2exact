@@ -19,7 +19,7 @@ namespace sap2exact.Domain
         public virtual double ExactGewensteNettoGewicht { get; set; }
 
         public virtual double KostPrijs { get; set; }
-        public virtual double VerkoopPrijs { get; set; }
+        //public virtual double VerkoopPrijs { get; set; }
 
 
         // uit scherm arikelen per leverancier
