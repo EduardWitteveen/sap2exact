@@ -9,18 +9,23 @@ namespace sap2exact
 {
     public static class Output
     {
-        private class InfoLog
+        private class InfoLog : IDisposable
         {
             private FileInfo infolog;
+            private StreamWriter writer;
             public InfoLog()
             {
                 infolog = new FileInfo("info.txt");
                 if (infolog.Exists) infolog.Delete();
+                writer = infolog.AppendText();
             }
             public void Write(string message)
             {
-                var writer = infolog.AppendText();
                 writer.WriteLine("[" + DateTime.Now.Ticks + "] " + message);
+            }
+            public void Dispose()
+            {
+                // make sure we flush
                 writer.Close();
             }
 
@@ -45,7 +50,7 @@ namespace sap2exact
 
         public static void Info(string message)
         {
-            errorlog.Write(message);
+            infolog.Write(message);
             System.Diagnostics.Debug.WriteLine("[OUTPUT INFO] " + message);
             Console.Out.WriteLine(message);
         }
