@@ -406,19 +406,11 @@ namespace sap2exact
         public string Convert2VerpakkingsType(Domain.BaseArtikel artikel, bool salesunit = false)
         {
             string verpakkingstype;
-            System.Diagnostics.Debug.Assert(!salesunit);
             if (salesunit)
             {
-                // TODO: gaat fout!!
+                // TODO: gaat/ging fout!!
                 // SAP2EXACT: aantalconversie
-                if (artikel.GetType() == typeof(Domain.VerpakkingsArtikel))
-                {
-                    verpakkingstype = artikel.BasishoeveelheidEenheid;
-                }
-                else
-                {
-                    verpakkingstype = artikel.Gewichtseenheid;
-                }
+                verpakkingstype = artikel.BasishoeveelheidEenheid;
                 ////////////////////////////////////////////////////
             }
             else
@@ -449,6 +441,14 @@ namespace sap2exact
             else if (verpakkingstype == "ZAK")
             {
                 verpakkingstype = "zak";
+            }
+            else if (verpakkingstype == "EM")
+            {
+                verpakkingstype = "emmer";
+            }
+            else if (verpakkingstype == "BB")
+            {
+                verpakkingstype = "bigbag";
             }
             else
             {
