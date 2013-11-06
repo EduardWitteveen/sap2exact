@@ -366,7 +366,7 @@ namespace sap2exact
 
             var unit = xmldocument.CreateElement("Unit");
             //unit.SetAttribute("unit", artikel.BasishoeveelheidEenheid);
-            unit.SetAttribute("unit", Convert2VerpakkingsType(artikel));            
+            unit.SetAttribute("unit", Convert2VerpakkingsType(artikel, true));            
             unit.SetAttribute("type", "O");
             unit.SetAttribute("active", "1");
             purchase.AppendChild(unit);
@@ -403,19 +403,37 @@ namespace sap2exact
             return item;
         }
 
-        public string Convert2VerpakkingsType(Domain.BaseArtikel artikel)
+        public string Convert2VerpakkingsType(Domain.BaseArtikel artikel, bool salesunit = false)
         {
             string verpakkingstype;
-            // SAP2EXACT: aantalconversie
-            if (artikel.GetType() == typeof(Domain.VerpakkingsArtikel))
+            System.Diagnostics.Debug.Assert(!salesunit);
+            if (salesunit)
             {
-                verpakkingstype = artikel.BasishoeveelheidEenheid;
+                // TODO: gaat fout!!
+                // SAP2EXACT: aantalconversie
+                if (artikel.GetType() == typeof(Domain.VerpakkingsArtikel))
+                {
+                    verpakkingstype = artikel.BasishoeveelheidEenheid;
+                }
+                else
+                {
+                    verpakkingstype = artikel.Gewichtseenheid;
+                }
+                ////////////////////////////////////////////////////
             }
             else
             {
-                verpakkingstype = artikel.Gewichtseenheid;
+                // SAP2EXACT: aantalconversie
+                if (artikel.GetType() == typeof(Domain.VerpakkingsArtikel))
+                {
+                    verpakkingstype = artikel.BasishoeveelheidEenheid;
+                }
+                else
+                {
+                    verpakkingstype = artikel.Gewichtseenheid;
+                }
+                ////////////////////////////////////////////////////
             }
-            ////////////////////////////////////////////////////
             if (verpakkingstype == "DS")
             {
                 verpakkingstype = "doos";
