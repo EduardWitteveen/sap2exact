@@ -51,7 +51,7 @@ namespace sap2exact
             var exporter = new Domain2Xml();
             exporter.WriteData(data);
 
-            // Console.In.Read();
+            Console.In.Read();
         }
     }
 }
