@@ -78,6 +78,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Conversie.cs" />
     <Compile Include="Database2Domain.cs" />
     <Compile Include="Hibernator.cs" />
     <Compile Include="Domain2Xml.cs" />
@@ -94,6 +95,7 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="conversie.xlsx" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

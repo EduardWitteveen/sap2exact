@@ -52,5 +52,17 @@ namespace sap2exact.Properties {
                 return ((string)(this["connection_string_sap"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
+        [global::System.Configuration.DefaultSettingValueAttribute("Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\\exact importeren artikelen\\sourc" +
+            "e\\sap2exact\\sap2exact\\conversie.xlsx;Extended Properties=\"Excel 12.0;HDR=Yes;IME" +
+            "X=1\"")]
+        public string connection_string_artikelgroepconversie {
+            get {
+                return ((string)(this["connection_string_artikelgroepconversie"]));
+            }
+        }
     }
 }

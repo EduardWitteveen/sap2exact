@@ -36,8 +36,8 @@ namespace sap2exact.Domain
             stuklijst.StuklijstTotaalAantal = AANTAL_IN_RECEPTUUR;
             stuklijst.StuklijstNaam = "SAP2EXACT: KG->KN";
             stuklijst.StuklijstVersion = 1;
-            stuklijst.StuklijstRegelsAdd(stuklijstmateriaal);
-            stuklijst.StuklijstRegelsAdd(stuklijstwater);
+            stuklijst.StuklijstRegels.Add(stuklijstmateriaal);
+            stuklijst.StuklijstRegels.Add(stuklijstwater);
             this.Stuklijsten.Add(stuklijst);
         }
     }
