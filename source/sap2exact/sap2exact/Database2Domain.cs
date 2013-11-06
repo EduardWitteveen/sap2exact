@@ -558,6 +558,13 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR";
                         }
                         Output.Error("invalid pos-nr in arikel:" + artikel.MateriaalCode + " value: " + posnr + " assuming:" + found);
                     }
+                    foreach(Domain.StuklijstRegel slr in stuklijst.StuklijstRegels) {
+                        if (slr.Volgnummer == found)
+                        {
+                            Output.Error("invalid pos-nr in arikel:" + artikel.MateriaalCode + " regel#: " + slr.Volgnummer + " for: " + slr.Artikel.MateriaalCode + " on same line as : " + matnr);
+                            found++;
+                        }
+                    }
                     receptuurregel.Volgnummer = found;
                     Domain.BaseArtikel childartikel = data.Retrieve(matnr);
                     if (childartikel == null)
@@ -587,8 +594,8 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR";
                         if (receptuurregel.ReceptuurEenheidFactor > 1)
                         {
                             receptuurregel.Artikel = childartikel;
-                            stuklijst.StuklijstRegelsAdd(receptuurregel);
-                            stuklijst.StuklijstRegelsAdd(Domain.AfvalArtikel.CreateStuklijstRegel(receptuurregel, receptuurregel.ReceptuurEenheidFactor));
+                            stuklijst.StuklijstRegels.Add(receptuurregel);
+                            stuklijst.StuklijstRegels.Add(Domain.AfvalArtikel.CreateStuklijstRegel(receptuurregel, receptuurregel.ReceptuurEenheidFactor));
                         }
                         else if (receptuurregel.ReceptuurEenheidFactor < 1)
                         {
@@ -607,19 +614,19 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR";
                                     data.Add(phantomartikel);
                                 }
                                 receptuurregel.Artikel = phantomartikel;
-                                stuklijst.StuklijstRegelsAdd(receptuurregel);
+                                stuklijst.StuklijstRegels.Add(receptuurregel);
                             }
                             else
                             {
                                 Output.Error("Factor fout in artikel:" + artikel.MateriaalCode + " voor: " + childartikel.MateriaalCode + ", we negeren de factor:" + receptuurregel.ReceptuurEenheidFactor);
                                 receptuurregel.Artikel = childartikel;
-                                stuklijst.StuklijstRegelsAdd(receptuurregel);
+                                stuklijst.StuklijstRegels.Add(receptuurregel);
                             }
                         }
                         else
                         {
                             receptuurregel.Artikel = childartikel;
-                            stuklijst.StuklijstRegelsAdd(receptuurregel);
+                            stuklijst.StuklijstRegels.Add(receptuurregel);
                         }
                     }
                 }

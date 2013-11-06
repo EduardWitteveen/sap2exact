@@ -31,7 +31,8 @@ namespace sap2exact
             var importer = new Database2Domain(sapconnection);
             var data = importer.ReadEindArtikelData();
             //var data = importer.ReadEindArtikelData("42760X99");
-            // var data = importer.ReadEindArtikelData("81110X99");
+            //var data = importer.ReadEindArtikelData("81110X99");
+            //var data = importer.ReadEindArtikelData("14009Z25");
             sapconnection.Close();
 
             //var data = new Domain.ExportData();             
@@ -50,7 +51,7 @@ namespace sap2exact
             var exporter = new Domain2Xml();
             exporter.WriteData(data);
 
-            Console.In.Read();
+            // Console.In.Read();
         }
     }
 }

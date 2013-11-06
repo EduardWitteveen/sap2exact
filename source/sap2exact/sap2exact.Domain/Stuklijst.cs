@@ -18,10 +18,5 @@ namespace sap2exact.Domain
         {
             StuklijstRegels = new List<StuklijstRegel>();
         }
-
-        public void StuklijstRegelsAdd(StuklijstRegel receptuurregel)
-        {
-            StuklijstRegels.Add(receptuurregel);
-        }
     }
 }
