@@ -105,6 +105,7 @@
     <Content Include="data.accdb">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="sap.txt" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\sap2exact.Domain\sap2exact.Domain.csproj">

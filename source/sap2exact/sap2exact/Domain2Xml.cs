@@ -16,8 +16,8 @@ namespace sap2exact
         XmlDocument xmldocument;
         XmlElement items;
 
-        const string ARTIKEL_CODE_OPVULLING = "T9_______";
-        const int ARTIKEL_CODE_LENGTE = 12;
+        //const string ARTIKEL_CODE_OPVULLING = "T9_______";
+        //const int ARTIKEL_CODE_LENGTE = 12;
         //const string OPVULLING = "VL_______";
         Conversie conversie;
 
@@ -26,11 +26,18 @@ namespace sap2exact
             if(artikel.GetType() == typeof(Domain.WeekWater)) {
                 return artikel.MateriaalCode;
             }
+            /*
             string code = artikel.MateriaalCode.Trim();
             int len = code.Length;
             code = ARTIKEL_CODE_OPVULLING.Substring(0, ARTIKEL_CODE_LENGTE - len) + code;
             System.Diagnostics.Debug.Assert(code.Length == ARTIKEL_CODE_LENGTE);
-
+            */
+            string code = artikel.MateriaalCode.Trim();
+            // wanneer de code start met een nummer, dan prefixen met "43" 
+            if (char.IsNumber(code[0]))
+            {
+                code = "43" + code;
+            }
             return code;
         }
 
