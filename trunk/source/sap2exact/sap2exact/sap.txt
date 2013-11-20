@@ -1,0 +1,86 @@
+﻿
+http://www.connexin.net/sap-tables.html
+http://www.stechno.net/sap-tables.html?view=saptable&id=EINA
+
+EINA Purchasing Info Record- General Data 
+EINE Purchasing Info Record- Purchasing Organization Data 
+MAKT Material Descriptions 
+MARA General Material Data 
+MARC Plant Data for Material 
+MARD Storage Location Data for Material 
+MAST Material to BOM Link 
+MBEW Material Valuation 
+MKPF Header- Material Document 
+MSEG Document Segment- Material 
+MVER Material Consumption 
+MVKE Sales Data for materials 
+RKPF Document Header- Reservation 
+T023 Mat. groups 
+T024 Purchasing Groups 
+T156 Movement Type 
+T157H Help Texts for Movement Types 
+MOFF Lists what views have not been created 
+A501 Plant/Material 
+EBAN Purchase Requisition 
+EBKN Purchase Requisition Account Assignment 
+EKAB Release Documentation 
+EKBE History per Purchasing Document 
+EKET Scheduling Agreement Schedule Lines 
+EKKN Account Assignment in Purchasing Document 
+EKKO Purchasing Document Header 
+EKPO Purchasing Document Item 
+IKPF Header- Physical Inventory Document 
+ISEG Physical Inventory Document Items 
+LFA1 Vendor Master (General section) 
+LFB1 Vendor Master (Company Code) 
+NRIV Number range intervals 
+RESB Reservation/dependent requirements 
+T161T Texts for Purchasing Document Types 
+SAP MM Tips by : Bahadur
+Following are the list of Important MM tables. Please check if its useful.
+
+Inventory Management:
+|-------------------------+--------+-----------------------------------------|
+|                         | Table  | Description                             |
+|-------------------------+--------+-----------------------------------------|
+| Material                | MSEG   | Material document / transaction details |
+| Document/Movements      | MKPF   | Material document header information    |
+|-------------------------+--------+-----------------------------------------|
+| Material Stock Balances | MARD   | Material stock                          |
+|                         | MBEW   | Material stock with valuation           |
+|-------------------------+--------+-----------------------------------------|
+| Sales Order Stock       | MSKA   | Stock balance with associated sales     |
+|                         |        | order data                              |
+|-------------------------+--------+-----------------------------------------|
+| Stock Transport         | EKUB   | Index for Stock Transport Orders for    |
+|                         | MDUB   | Material                                |
+|                         |        | Reading View of Stock Transport Ord. for|
+|                         |        | Release Ord.                            |
+|-------------------------+--------+-----------------------------------------|
+| Special Stocks          | MKOL   | Consignment, material provided to       |
+|                         |        | vendor, etc.                            |
+|-------------------------+--------+-----------------------------------------|
+
+Material Master Data:
+|-------------------------+---------+--------------------------------------|
+|                         |Table    | Description                          |
+|-------------------------+---------+--------------------------------------|
+| Materials               | MARA    | General Data, material type, group,  |
+|                         |         | configurable & batch ind.            |
+|                         | MAKT    | Short Texts, descriptions            |
+|                         | MARM    | Conversion Factors                   |
+|                         | MVKE    | Sales Org, distribution channel      |
+|                         | MLAN    | Sales data, tax indicator, tax       |
+|                         | MARC    | classification                       |
+|                         | MBEW    | Plant Planning Data                  |
+|                         | MLGN    | Valuation Data                       |
+|                         | MLGT    | Warehouse Management Inventory Data  |
+|                         | MVER    | Warehouse Management Storage Type    |
+|                         | MAPR    | Data                                 |
+|                         | MARD    | Consumption Data                     |
+|                         | MCHA    | Pointer for Forecast Data            |
+|                         | MCHB    | Storage location data with stock     |
+|                         |         | balances                             |
+|                         |         | Batches                              |
+|                         |         | Batch Stocks                         |
+|-------------------------+---------+--------------------------------------|
