@@ -51,6 +51,7 @@ namespace sap2exact
             var exporter = new Domain2Xml();
             exporter.WriteData(data);
 
+            Output.Info("Press any key to continue...");
             Console.In.Read();
         }
     }
