@@ -14,9 +14,16 @@ namespace sap2exact
         public class ArtikelGroepInformatie
         {
             public String Omschrijving;
-            public String BasisArtikelgroep;
-            public String BasisProductgroep;
-            public String FinancieleArtikelgroep;
+            public String BasisArtikelgroepCode;
+            public String BasisArtikelgroepOmschrijving;
+            public String BasisProductgroepCode;
+            public String BasisProductgroepOmschrijving;
+            public String BasisSoortartikelCode;
+            public String BasisSoortartikelOmschrijving;
+
+            public String FinancieleArtikelgroepNummer;
+            public String FinancieleArtikelgroepCode;
+
             public String FinancieleOmzet;
             public String FinancieleVoorraad;	
             public String FinancieleKostprijsverkopen;
@@ -48,10 +55,11 @@ namespace sap2exact
             string typenaam = artikel.GetType().Name;
             string materiaalcode = artikel.MateriaalCode;
 
-            var list = from row in artikelgroep.AsEnumerable()
-                      where row.Field<string>("Vergelijk_ArtikelType") == typenaam
-                       orderby row.Field<string>("Vergelijk_Begin") == null ? 0 : row.Field<string>("Vergelijk_Begin").Length descending
-                      select row;
+            var list = 
+                from row in artikelgroep.AsEnumerable()
+                where row.Field<string>("Vergelijk_ArtikelType") == typenaam
+                orderby row.Field<string>("Vergelijk_Begin") == null ? 0 : row.Field<string>("Vergelijk_Begin").Length descending
+                select row;
             if (list.Count() < 1)
             {
                 GetData();
@@ -64,9 +72,16 @@ namespace sap2exact
                 {
                     ArtikelGroepInformatie agi = new ArtikelGroepInformatie();
                     agi.Omschrijving = row["Omschrijving"].ToString();
-                    agi.BasisArtikelgroep = row["Gewenste_Basis_Artikelgroep"].ToString();
-                    agi.BasisProductgroep = row["Gewenste_Basis_Productgroep"].ToString();
-                    agi.FinancieleArtikelgroep = row["Gewenste_Financiele_Artikelgroep"].ToString();
+                    agi.BasisArtikelgroepCode = row["Gewenste_Basis_Artikelgroep_Code"].ToString();
+                    agi.BasisArtikelgroepOmschrijving = row["Gewenste_Basis_Artikelgroep_Omschrijving"].ToString();
+                    agi.BasisProductgroepCode = row["Gewenste_Basis_Productgroep_Code"].ToString();
+                    agi.BasisProductgroepOmschrijving = row["Gewenste_Basis_Productgroep_Omschrijving"].ToString();
+                    agi.BasisSoortartikelCode = row["Gewenste_Basis_Soortartikel_Code"].ToString();
+                    agi.BasisSoortartikelOmschrijving = row["Gewenste_Basis_Soortartikel_Omschrijving"].ToString();
+
+                    agi.FinancieleArtikelgroepNummer = row["Gewenste_Financiele_Artikelgroep_Nummer"].ToString();
+                    agi.FinancieleArtikelgroepCode = row["Gewenste_Financiele_Artikelgroep_Code"].ToString();
+
                     agi.FinancieleOmzet = row["Gewenste_Financiele_Omzet"].ToString();
                     agi.FinancieleVoorraad = row["Gewenste_Financiele_Voorraad"].ToString();
                     agi.FinancieleKostprijsverkopen = row["Gewenste_Financiele_Kostprijsverkopen"].ToString();

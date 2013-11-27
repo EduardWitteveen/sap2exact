@@ -10,10 +10,7 @@ namespace sap2exact.Domain
     public class ExportData        
     {
         public virtual Guid Id { get; set; }
-
-
         public virtual Dictionary<string, Domain.BaseArtikel> AlleArtikelen { get; set; }
-
         public virtual Dictionary<string, Domain.EindArtikel> EindArtikelen { get; set; }
         public virtual Dictionary<string, Domain.ReceptuurArtikel> ReceptuurArtikelen { get; set; }
         public virtual Dictionary<string, Domain.VerpakkingsArtikel> VerpakkingsArtikelen { get; set; }

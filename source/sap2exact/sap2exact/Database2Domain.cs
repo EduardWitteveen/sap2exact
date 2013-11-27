@@ -462,7 +462,10 @@ SELECT
     STAS.LKENZ AS STAS_LKENZ,
     STAS.STASZ AS STAS_STASZ,
     STPO.LKENZ  AS STPO_LKENZ,
-    STPO.STPOZ AS STPO_STPOZ
+    STPO.STPOZ AS STPO_STPOZ,
+    '------',
+    STPO.POTX1 AS STPO_POTX1,
+    STPO.POTX2 AS STPO_POTX2    
 FROM MAST
 JOIN STKO 
     ON STKO.MANDT  = MAST.MANDT
@@ -542,92 +545,118 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR";
                     stuklijst.StuklijstTotaalAantal = Convert.ToDouble(bomrow["STKO_BMENG"]);
                 }
 
-                string matnr = Convert.ToString(bomrow["STPO_idnrk"]);
-                if (matnr.Length > 0)
-                {                    
-                    var receptuurregel = new Domain.StuklijstRegel();
-                    var posnr = Convert.ToString(bomrow["STPO_posnr"]);
-                    int found = 0;
-                    if (!Int32.TryParse(posnr, out found))
+                var matnr = Convert.ToString(bomrow["STPO_idnrk"]);
+                var receptuurregel = new Domain.StuklijstRegel();
+                var posnr = Convert.ToString(bomrow["STPO_posnr"]);
+                int found = 0;
+                if (!Int32.TryParse(posnr, out found))
+                {
+                    foreach(char c in posnr.ToCharArray()) {
+                        if(char.IsDigit(c)) {
+                            found = found * 10;
+                            found += Convert.ToInt32(c.ToString());
+                        }
+                    }
+                    Output.Error("invalid pos-nr in arikel:" + artikel.MateriaalCode + " value: " + posnr + " assuming:" + found);
+                }
+                foreach(Domain.StuklijstRegel slr in stuklijst.StuklijstRegels) {
+                    if (slr.Volgnummer == found)
                     {
-                        foreach(char c in posnr.ToCharArray()) {
-                            if(char.IsDigit(c)) {
-                                found = found * 10;
-                                found += Convert.ToInt32(c.ToString());
-                            }
-                        }
-                        Output.Error("invalid pos-nr in arikel:" + artikel.MateriaalCode + " value: " + posnr + " assuming:" + found);
+                        Output.Error("invalid pos-nr in arikel:" + artikel.MateriaalCode + " regel#: " + slr.Volgnummer + " for: " + slr.Artikel.MateriaalCode + " on same line as : " + matnr);
+                        found++;
                     }
-                    foreach(Domain.StuklijstRegel slr in stuklijst.StuklijstRegels) {
-                        if (slr.Volgnummer == found)
-                        {
-                            Output.Error("invalid pos-nr in arikel:" + artikel.MateriaalCode + " regel#: " + slr.Volgnummer + " for: " + slr.Artikel.MateriaalCode + " on same line as : " + matnr);
-                            found++;
-                        }
-                    }
-                    receptuurregel.Volgnummer = found;
-                    Domain.BaseArtikel childartikel = data.Retrieve(matnr);
-                    if (childartikel == null)
+                }
+                receptuurregel.Volgnummer = found;
+                Domain.BaseArtikel childartikel = null;
+                if (matnr.Length == 0)
+                {
+                    // textregel
+                    childartikel = new Domain.TekstArtikel(
+                            Convert.ToString(bomrow["STPO_POTX1"]),
+                            Convert.ToString(bomrow["STPO_POTX2"])
+                        );
+                }
+                else
+                {
+                    childartikel = data.Retrieve(matnr);
+                }
+                if (childartikel == null)
+                {
+                    childartikel = ReadArtikelData(mandt, matnr, ident + 1);
+                    if (data.Retrieve(matnr) == null)
                     {
-                        childartikel = ReadArtikelData(mandt, matnr, ident + 1);
-                        if (data.Retrieve(matnr) == null)
-                        {
-                            data.Add(childartikel);
-                        }
-                        else
-                        {
-                            Output.Error("Recursive usage of article:" + matnr + " in samengesteld-artikel:" + artikel.MateriaalCode);
-                        }
+                        data.Add(childartikel);
                     }
-                    receptuurregel.ReceptuurRegelAantal = Convert.ToDouble(bomrow["STPO_menge"]);
-                    receptuurregel.ReceptuurEenheid = Convert.ToString(bomrow["STPO_meins"]);
+                    else
+                    {
+                        Output.Error("Recursive usage of article:" + matnr + " in samengesteld-artikel:" + artikel.MateriaalCode);
+                    }
+                }
+                receptuurregel.ReceptuurRegelAantal = Convert.ToDouble(bomrow["STPO_menge"]);
+                receptuurregel.ReceptuurEenheid = Convert.ToString(bomrow["STPO_meins"]);
 
+                if (childartikel.GetType() != typeof(Domain.TekstArtikel))
+                {
                     // SAP2EXACT: aantalconversie
-                    receptuurregel.ReceptuurEenheidFactor = 
+                    receptuurregel.ReceptuurEenheidFactor =
                         childartikel.ConversieFactor(childartikel.Gewichtseenheid, receptuurregel.ReceptuurEenheid);
-                    receptuurregel.ReceptuurEenheidConversie = 
+                    receptuurregel.ReceptuurEenheidConversie =
                         "van:" + childartikel.Gewichtseenheid + " naar:" + receptuurregel.ReceptuurEenheidFactor + " factor:" + receptuurregel.ReceptuurEenheidFactor;
+                }
 
-                    // geen ingredienten meenemen!
-                    if (childartikel.GetType() != typeof(Domain.IngredientArtikel))
+                // geen ingredientenmeenemen!
+                if (childartikel.GetType() != typeof(Domain.IngredientArtikel))
+                {
+                    if (childartikel.GetType() == typeof(Domain.TekstArtikel))
                     {
-                        if (receptuurregel.ReceptuurEenheidFactor > 1)
+                        // tekstregel
+                        receptuurregel.Artikel = childartikel;
+                        stuklijst.StuklijstRegels.Add(receptuurregel);
+                    }
+                    else if (receptuurregel.ReceptuurEenheidFactor == 1)
+                    {
+                        // gewoon artikel
+                        receptuurregel.Artikel = childartikel;
+                        stuklijst.StuklijstRegels.Add(receptuurregel);
+                    }
+                    else if (receptuurregel.ReceptuurEenheidFactor > 1)
+                    {
+                        // artikel met afval
+                        receptuurregel.Artikel = childartikel;
+                        stuklijst.StuklijstRegels.Add(receptuurregel);
+                        stuklijst.StuklijstRegels.Add(Domain.AfvalArtikel.CreateStuklijstRegel(receptuurregel, receptuurregel.ReceptuurEenheidFactor));
+                    }
+                    else if (receptuurregel.ReceptuurEenheidFactor < 1)
+                    {
+                        // artikel met spoelwater
+                        if (receptuurregel.ReceptuurEenheid == "KN")
                         {
-                            receptuurregel.Artikel = childartikel;
-                            stuklijst.StuklijstRegels.Add(receptuurregel);
-                            stuklijst.StuklijstRegels.Add(Domain.AfvalArtikel.CreateStuklijstRegel(receptuurregel, receptuurregel.ReceptuurEenheidFactor));
-                        }
-                        else if (receptuurregel.ReceptuurEenheidFactor < 1)
-                        {
-                            // Dit moet wel een KN zijn, dus spoelwater ontbreekt hierin!
                             // maak hiervoor een PhantomArikel aan
-                            if (receptuurregel.ReceptuurEenheid == "KN")
+                            // Dit moet wel een KN zijn, dus spoelwater ontbreekt hierin!
+                            var phantomartikel = new Domain.PhantomArtikel(childartikel, receptuurregel.ReceptuurEenheidFactor);                            
+                            if (data.AlleArtikelen.ContainsKey(phantomartikel.MateriaalCode))
                             {
-                                var phantomartikel = new Domain.PhantomArtikel(childartikel, receptuurregel.ReceptuurEenheidFactor);
-                                if (data.AlleArtikelen.ContainsKey(phantomartikel.MateriaalCode))
-                                {
-                                    Domain.PhantomArtikel pa = (Domain.PhantomArtikel)data.AlleArtikelen[phantomartikel.MateriaalCode];
-                                    phantomartikel = pa;
-                                }
-                                else
-                                {
-                                    data.Add(phantomartikel);
-                                }
-                                receptuurregel.Artikel = phantomartikel;
-                                stuklijst.StuklijstRegels.Add(receptuurregel);
+                                Domain.PhantomArtikel pa = (Domain.PhantomArtikel)data.AlleArtikelen[phantomartikel.MateriaalCode];
+                                phantomartikel = pa;
                             }
                             else
                             {
-                                Output.Error("Factor fout in artikel:" + artikel.MateriaalCode + " voor: " + childartikel.MateriaalCode + ", we negeren de factor:" + receptuurregel.ReceptuurEenheidFactor);
-                                receptuurregel.Artikel = childartikel;
-                                stuklijst.StuklijstRegels.Add(receptuurregel);
+                                data.Add(phantomartikel);
                             }
+                            receptuurregel.Artikel = phantomartikel;
+                            stuklijst.StuklijstRegels.Add(receptuurregel);
                         }
                         else
                         {
+                            Output.Error("Factor fout in artikel:" + artikel.MateriaalCode + " voor: " + childartikel.MateriaalCode + ", we negeren de factor:" + receptuurregel.ReceptuurEenheidFactor);
                             receptuurregel.Artikel = childartikel;
                             stuklijst.StuklijstRegels.Add(receptuurregel);
                         }
+                    }
+                    else
+                    {
+                        Output.Error("Deze code mag nooit bereikt worden: ReceptuurEenheidFactor:" + receptuurregel.ReceptuurEenheidFactor);
+                        throw new NotImplementedException("Deze code mag nooit bereikt worden: ReceptuurEenheidFactor:" + receptuurregel.ReceptuurEenheidFactor);
                     }
                 }
             }
