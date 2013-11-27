@@ -42,6 +42,7 @@
     <Compile Include="AfvalArtikel.cs" />
     <Compile Include="BaseArtikel.cs" />
     <Compile Include="BaseSamengesteldArtikel.cs" />
+    <Compile Include="TekstArtikel.cs" />
     <Compile Include="PhantomArtikel.cs" />
     <Compile Include="EindArtikel.cs" />
     <Compile Include="ExportData.cs" />

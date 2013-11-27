@@ -23,7 +23,12 @@ namespace sap2exact
 
         static string CreateSapCode(Domain.BaseArtikel artikel)
         {
-            if(artikel.GetType() == typeof(Domain.WeekWater)) {
+            if(
+                artikel.GetType() == typeof(Domain.WeekWater)
+                ||
+                artikel.GetType() == typeof(Domain.TekstArtikel)
+            )
+            {
                 return artikel.MateriaalCode;
             }
             /*
@@ -93,12 +98,13 @@ namespace sap2exact
             item.AppendChild(multidescriptions);
             ////////////////////////////////////////////////////////
             var assortment = xmldocument.CreateElement("Assortment");
-            assortment.SetAttribute("number", artikelgroepinformatie.FinancieleArtikelgroep);
+            assortment.SetAttribute("number", artikelgroepinformatie.FinancieleArtikelgroepNummer);
+            assortment.SetAttribute("code", artikelgroepinformatie.FinancieleArtikelgroepCode);
             var asdescription = xmldocument.CreateElement("Description");
             asdescription.AppendChild(xmldocument.CreateTextNode("Artikelgroep"));
             assortment.AppendChild(asdescription);
             AddGlStuff(assortment, artikelgroepinformatie);
-            item.AppendChild(assortment);                
+            item.AppendChild(assortment);
             ////////////////////////////////////////////////////////            
             var availability = xmldocument.CreateElement("Availability");
             var datestart = xmldocument.CreateElement("DateStart");
@@ -295,11 +301,16 @@ namespace sap2exact
                         bomline.SetAttribute("sequencenumber", receptuurregel.Volgnummer.ToString());
                         var bomitem = xmldocument.CreateElement("Item");
                         bomitem.SetAttribute("code", CreateSapCode(receptuurregel.Artikel));
-                        var bomdescription = xmldocument.CreateElement("Description");
-
-                        bomdescription.AppendChild(xmldocument.CreateTextNode(receptuurregel.Artikel.ArtikelOmschrijving));
-                        bomitem.AppendChild(bomdescription);
+                        var bomitemdescription = xmldocument.CreateElement("Description");
+                        bomitemdescription.AppendChild(xmldocument.CreateTextNode(receptuurregel.Artikel.ArtikelOmschrijving));
+                        bomitem.AppendChild(bomitemdescription);
                         bomline.AppendChild(bomitem);
+                        var bomdescription = xmldocument.CreateElement("Description");
+                        var bomlinedescription = receptuurregel.Artikel.GetType() == typeof(Domain.TekstArtikel)?
+                            ((Domain.TekstArtikel)receptuurregel.Artikel).Tekst:
+                            receptuurregel.Artikel.ArtikelOmschrijving;
+                        bomdescription.AppendChild(xmldocument.CreateTextNode(bomlinedescription));
+                        bomline.AppendChild(bomdescription);
 
                         var condition = xmldocument.CreateElement("Condition");
                         string conditiontext = "N";
@@ -309,7 +320,7 @@ namespace sap2exact
                         else if(receptuurregel.Artikel.GetType() == typeof(Domain.AfvalArtikel) ) {
                             conditiontext = "W";
                         }
-                        condition.AppendChild(xmldocument.CreateTextNode( conditiontext ));
+                        condition.AppendChild(xmldocument.CreateTextNode(conditiontext));
                         bomline.AppendChild(condition);
 
                         var backflush = xmldocument.CreateElement("BackFlush");
@@ -552,21 +563,22 @@ namespace sap2exact
             // class 1: basis artikelgroep
             var itemcategory = xmldocument.CreateElement("ItemCategory");
             itemcategory.SetAttribute("number", "1");
-            itemcategory.SetAttribute("code", artikelgroepinformatie.BasisArtikelgroep);
+            itemcategory.SetAttribute("code", artikelgroepinformatie.BasisArtikelgroepCode);
             var description = xmldocument.CreateElement("Description");
-            description.AppendChild(xmldocument.CreateTextNode(artikelgroepinformatie.BasisArtikelgroep));
+            description.AppendChild(xmldocument.CreateTextNode(artikelgroepinformatie.BasisArtikelgroepOmschrijving));
             itemcategory.AppendChild(description);
             item.AppendChild(itemcategory);
 
             // class 2: basis productgroep
             itemcategory = xmldocument.CreateElement("ItemCategory");
             itemcategory.SetAttribute("number", "2");
-            itemcategory.SetAttribute("code", artikelgroepinformatie.BasisProductgroep);
+            itemcategory.SetAttribute("code", artikelgroepinformatie.BasisProductgroepCode);
             description = xmldocument.CreateElement("Description");
-            description.AppendChild(xmldocument.CreateTextNode(artikelgroepinformatie.BasisProductgroep));
+            description.AppendChild(xmldocument.CreateTextNode(artikelgroepinformatie.BasisProductgroepOmschrijving));
             itemcategory.AppendChild(description);
             item.AppendChild(itemcategory);
 
+            /*
             // class 3
             string iccode = "30";
             string icdescription = "Halffabrikaten";
@@ -596,12 +608,12 @@ namespace sap2exact
                 icdescription = "Gereed Product";
             }
             else throw new NotImplementedException("unsupported article type");
-
+            */
             itemcategory = xmldocument.CreateElement("ItemCategory");
             itemcategory.SetAttribute("number", "3");
-            itemcategory.SetAttribute("code", iccode);
+            itemcategory.SetAttribute("code", artikelgroepinformatie.BasisSoortartikelCode);
             description = xmldocument.CreateElement("Description");
-            description.AppendChild(xmldocument.CreateTextNode(icdescription));
+            description.AppendChild(xmldocument.CreateTextNode(artikelgroepinformatie.BasisSoortartikelOmschrijving));
             itemcategory.AppendChild(description);
             item.AppendChild(itemcategory);
             if (artikel.GetType() == typeof(Domain.EindArtikel))
