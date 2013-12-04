@@ -67,15 +67,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <COMReference Include="PocketHTTP">
-      <Guid>{AF2EB73C-E028-4307-BE71-E6C40306AD63}</Guid>
-      <VersionMajor>1</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </COMReference>
     <COMReference Include="PocketSOAP">
       <Guid>{1259E267-74E3-4D78-B08E-DB9F9F785E04}</Guid>
       <VersionMajor>1</VersionMajor>

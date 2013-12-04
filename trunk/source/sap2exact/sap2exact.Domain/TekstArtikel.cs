@@ -9,11 +9,11 @@ namespace sap2exact.Domain
     public class TekstArtikel: BaseArtikel
     {
         public string Tekst;
-        public TekstArtikel(string tekstregel1, string tekstregel2)
+        public TekstArtikel(string tekst)
         {
             this.MateriaalCode = "INSTRUCTIE";
             this.ArtikelOmschrijving = "Instuctie productieorder";
-            Tekst = tekstregel1 + " " + tekstregel2;
+            Tekst = tekst;
         }
     }
 }
