@@ -112,6 +112,10 @@
       <Project>{1ec8e78e-da32-4f21-b319-47919f22688d}</Project>
       <Name>sap2exact.Domain</Name>
     </ProjectReference>
+    <ProjectReference Include="..\sap2exact.SapSDK\sap2exact.SapSDK.csproj">
+      <Project>{0b31cd20-3533-452c-a223-2a3701dcbc5e}</Project>
+      <Name>sap2exact.SapSDK</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

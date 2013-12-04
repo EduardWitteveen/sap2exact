@@ -64,5 +64,41 @@ namespace sap2exact.Properties {
                 return ((string)(this["connection_string_artikelgroepconversie"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("dmc08")]
+        public string sdk_sap_server {
+            get {
+                return ((string)(this["sdk_sap_server"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("08")]
+        public string sdk_sap_instance {
+            get {
+                return ((string)(this["sdk_sap_instance"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("steensma")]
+        public string sdk_sap_user {
+            get {
+                return ((string)(this["sdk_sap_user"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("steensma")]
+        public string sdk_sap_password {
+            get {
+                return ((string)(this["sdk_sap_password"]));
+            }
+        }
     }
 }

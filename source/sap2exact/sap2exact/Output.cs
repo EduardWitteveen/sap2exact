@@ -25,10 +25,20 @@ namespace sap2exact
             }
             public void Dispose()
             {
-                // make sure we flush
-                writer.Close();
+                Dispose(true);
+                GC.SuppressFinalize(this);
             }
+            protected virtual void Dispose(bool disposing)
+            {
+                if (disposing)
+                {
+                    // get rid of managed resources
 
+                    // make sure we flush
+                    writer.Close();
+                }
+                // get rid of unmanaged resources
+            }
         }
         private class ErrorLog
         {
@@ -60,6 +70,11 @@ namespace sap2exact
             errorlog.Write(message);
             System.Diagnostics.Debug.WriteLine("[OUTPUT ERROR] " + message);
             Console.Error.WriteLine(message);
+        }
+
+        public static void Dispose()
+        {
+            infolog.Dispose();
         }
     }
 }
