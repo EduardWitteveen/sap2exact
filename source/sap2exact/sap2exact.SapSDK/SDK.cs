@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 
 
-using RFCCONNECTORLib;
 using System.Data;
 
 
@@ -13,7 +12,7 @@ namespace sap2exact.SapSDK
 {
     public class SDK : IDisposable
     {
-        private RfcSession rfcsession = new RfcSession();
+        private secept.RfcConnector.RfcSession rfcsession = new secept.RfcConnector.RfcSession();
         public SDK(string server, string instance, string user, string password)
         {
             
@@ -22,62 +21,55 @@ namespace sap2exact.SapSDK
             rfcsession.LogonData.Password = password;
             rfcsession.LogonData.Language = "EN";
 
+            // enable tracing for client
+            rfcsession.Option["trace.file"] = new System.IO.FileInfo("sap-rpc.log").FullName;
+            rfcsession.LicenseData.Owner = "(unregistered DEMO version)";
+            rfcsession.LicenseData.key = "1EX4839S13W620TBRZ44NRE4ALBCVJH";            
+            
             // connect and check error
             rfcsession.Connect();
 
             if (rfcsession.Error) throw new Exception(rfcsession.ErrorInfo.Message);
         }
 
-        public string[] CallParameters(string function)
+        public string GetLongText(string mandt, string stlty, string stlnr, string stlkn, string stpoz)
         {
-            List<string> result = new List<string>();
-
-            FunctionCall fc = rfcsession.ImportCall(function);
-            foreach (RfcParameter p in fc.Importing)
-            {
-                System.Diagnostics.Debug.WriteLine("function: '" + function + "' with parameter: '" + p.name + "'");
-                result.Add(p.name);
-            }
-            return result.ToArray();
-        }
-
-        public string Call(string function, Dictionary<string, object> parameters) 
-        {
-            FunctionCall fc = rfcsession.ImportCall(function);
-            // print the functions
-            //foreach (RfcParameter p in fc.Importing)
-            //{
-            //    System.Diagnostics.Debug.WriteLine("function: '" + function + "' with parameter: '" + p.name + "'");
-            //}
-            foreach (string parametername in parameters.Keys)
-            {
-                fc.Importing[parametername].value = parameters[parametername];
-            }
-
+            //  SELECT *
+            //  FROM STXL
+            //  WHERE TDNAME = '100M000024700000000500000010'
+            //  |----------|-----------|-----------|-----------------------------------|-----------|-----------|-----------|-----------|-----------|
+            //  |   MANDT  |    RLID   |   TDOBJECT |   TDNAME                          |   TDID    |   TDSPRAS |   SRTF2   |   CLUSTR  |   CLUSTD  |
+            //  |----------|-----------|-----------|-----------------------------------|-----------|-----------|-----------|-----------|-----------|
+            //  |   100    |    TX     |   BOM      |   100M000024700000000500000010    |   MPO     |   N       |   0       |   288     |   ÿ €     |
+            //  |----------|-----------|-----------|-----------------------------------|-----------|-----------|-----------|-----------|-----------|            
+            // get the functionhandle
+            secept.RfcConnector.FunctionCall fc = rfcsession.ImportCall("RFC_READ_TEXT", true);
             System.Diagnostics.Debug.Assert(!rfcsession.Error);
-
+            // enter the parameters
+            secept.RfcConnector.RfcFields newrow = fc.Tables["TEXT_LINES"].Rows.AddRow();
+            newrow["TDOBJECT"].value = "BOM";
+            string tdname = "100M000024700000000500000010";
+            System.Diagnostics.Debug.Assert(tdname.Length == 28);
+            newrow["TDNAME"].value = tdname;
+            newrow["TDID"].value = "MPO";
+            newrow["TDSPRAS"].value = "N";
+            // call the function
             rfcsession.CallFunction(fc);
+
             if (rfcsession.Error)
             {
-                string message = rfcsession.ErrorInfo.Message;
-                throw new Exception(message);
+                rfcsession.Disconnect();
+                throw new Exception(rfcsession.ErrorInfo.Message);
             }
-
-            if (fc.Tables.Count != 1)
+            StringBuilder result = new StringBuilder();
+            foreach (secept.RfcConnector.RfcFields row in fc.Tables["TEXT_LINES"].Rows)
             {
-                throw new Exception("function: " + function + " : did not count 1 table, count:" + fc.Tables.Count);
+                string tdline = row["TDLINE"].value;
+                result.AppendLine(tdline);
             }
+            System.Diagnostics.Debug.WriteLine("result:" + result);
 
-            DataSet result = new DataSet();
-            foreach(RfcParameter table in fc.Tables) {
-                DataTable dt = new DataTable(table.name);
-
-                foreach (RfcFields row in table.Rows)
-                {
-                    int i = 42;
-                }
-            }
-            return "appelmoes";
+            return result.ToString();
         }
 
         public void Dispose()

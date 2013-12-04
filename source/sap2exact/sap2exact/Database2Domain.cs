@@ -15,11 +15,13 @@ namespace sap2exact
         private Domain.ExportData data;
 
         private MaxDB.Data.MaxDBConnection sapconnection;
+        private sap2exact.SapSDK.SDK sdk;
 
-        public Database2Domain(MaxDB.Data.MaxDBConnection sapconnection)
+        public Database2Domain(MaxDB.Data.MaxDBConnection sapconnection, sap2exact.SapSDK.SDK sdk)
         {
             // TODO: Complete member initialization
             this.sapconnection = sapconnection;
+            this.sdk = sdk;
         }
 
         private DateTime ConvertSapDate(object value, string where)
@@ -465,7 +467,12 @@ SELECT
     STPO.STPOZ AS STPO_STPOZ,
     '------',
     STPO.POTX1 AS STPO_POTX1,
-    STPO.POTX2 AS STPO_POTX2    
+    STPO.POTX2 AS STPO_POTX2,
+    STPO.MANDT AS STPO_MANDT,
+    STPO.STLTY AS STPO_STLTY,
+    STPO.STLNR AS STPO_STLNR,
+    STPO.STLKN AS STPO_STLKN,
+    STPO.STPOZ AS STPO_STPOZ 
 FROM MAST
 JOIN STKO 
     ON STKO.MANDT  = MAST.MANDT
@@ -571,10 +578,14 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR";
                 if (matnr.Length == 0)
                 {
                     // textregel
-                    childartikel = new Domain.TekstArtikel(
-                            Convert.ToString(bomrow["STPO_POTX1"]),
-                            Convert.ToString(bomrow["STPO_POTX2"])
-                        );
+                    string text = sdk.GetLongText(
+                            Convert.ToString(bomrow["STPO_MANDT"]),
+                            Convert.ToString(bomrow["STPO_STLTY"]),
+                            Convert.ToString(bomrow["STPO_STLNR"]),
+                            Convert.ToString(bomrow["STPO_STLKN"]),
+                            Convert.ToString(bomrow["STPO_STPOZ"])
+                    );
+                    childartikel = new Domain.TekstArtikel(text);
                 }
                 else
                 {
