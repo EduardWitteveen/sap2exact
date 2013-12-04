@@ -402,7 +402,17 @@ namespace sap2exact
             var itemwarehouse = xmldocument.CreateElement("ItemWarehouse");
             itemwarehouse.SetAttribute("default", "1");
             var warehouse = xmldocument.CreateElement("Warehouse");
-            warehouse.SetAttribute("code", "300");
+
+            if (artikel.GetType() == typeof(Domain.GrondstofArtikel) || artikel.GetType() == typeof(Domain.VerpakkingsArtikel))
+            {
+                // grondstoffen magazijn
+                warehouse.SetAttribute("code", "305");
+            }
+            else
+            {
+                // "gewone" magazijn
+                warehouse.SetAttribute("code", "300");
+            }
             itemwarehouse.AppendChild(warehouse);
             itemwarehouses.AppendChild(itemwarehouse);
             item.AppendChild(itemwarehouses);
