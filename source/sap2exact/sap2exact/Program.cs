@@ -21,13 +21,6 @@ namespace sap2exact
             System.Globalization.CultureInfo ci = new System.Globalization.CultureInfo("en-US");
             System.Threading.Thread.CurrentThread.CurrentCulture = ci;
             System.Threading.Thread.CurrentThread.CurrentUICulture = ci;
-
-            sap2exact.SapSDK.SDK sdk = new SapSDK.SDK(
-                Properties.Settings.Default.sdk_sap_server,
-                Properties.Settings.Default.sdk_sap_instance,
-                Properties.Settings.Default.sdk_sap_user,
-                Properties.Settings.Default.sdk_sap_password
-            );
             /*
                 1. You will get the short text from STPO-POTX1 -- First line of the Long Text and STPO-POTX2 -- Second line of the Long Text
                 2. Long text
@@ -41,7 +34,7 @@ namespace sap2exact
                             STPO-STLKN    2
                             STPO-STPOZ    4
                            ie.  800M000028630000000200000004     
-             */
+            */
             /*
             function: 'READ_TEXT' with parameter: 'ARCHIVE_HANDLE'
             function: 'READ_TEXT' with parameter: 'CLIENT'
@@ -91,58 +84,58 @@ namespace sap2exact
                 FROM STXL
                 WHERE TDNAME = '100M000024700000000500000010'
              */
-            sdk.Call("READ_TEXT", new Dictionary<string, object>() {                
-                {"OBJECT", "BOM"},
-                {"NAME", "100M000024700000000500000010"},
-                {"ID", "MPO"}, 
-                {"LANGUAGE","N"},
+            //sap2exact.SapSDK.SDK sdk = new SapSDK.SDK(
+            //    Properties.Settings.Default.sdk_sap_server,
+            //    Properties.Settings.Default.sdk_sap_instance,
+            //    Properties.Settings.Default.sdk_sap_user,
+            //    Properties.Settings.Default.sdk_sap_password
+            //);
+            //sdk.Call("READ_TEXT", new Dictionary<string, object>() {                
+            //    {"OBJECT", "BOM"},
+            //    {"NAME", "100M000024700000000500000010"},
+            //    {"ID", "MPO"}, 
+            //    {"LANGUAGE","N"},
 
 
-                {"CLIENT", 100},
-                {"ARCHIVE_HANDLE", 0}
-            });
+            //    {"CLIENT", 100},
+            //    {"ARCHIVE_HANDLE", 0}
+            //});
+            //sdk.Dispose();
+            var csb = new MaxDB.Data.MaxDBConnectionStringBuilder(Properties.Settings.Default.connection_string_sap);
+            Output.Info("SAP Connectionstring: " + csb.ConnectionString);
+            var sapconnection = new MaxDB.Data.MaxDBConnection(csb.ConnectionString);
 
-            
-                
-                
+            // read the sap data
+            sapconnection.Open();
+            var importer = new Database2Domain(sapconnection);
+            var data = importer.ReadEindArtikelData();
+            //var data = importer.ReadEindArtikelData("42760X99");
+            //var data = importer.ReadEindArtikelData("81110X99");
+            //var data = importer.ReadEindArtikelData("14009Z25");
+            //var data = importer.ReadEindArtikelData("01050D15");            
+            sapconnection.Close();
 
-                        /*
-                        var csb = new MaxDB.Data.MaxDBConnectionStringBuilder(Properties.Settings.Default.connection_string_sap);
-                        Output.Info("SAP Connectionstring: " + csb.ConnectionString);
-                        var sapconnection = new MaxDB.Data.MaxDBConnection(csb.ConnectionString);
+            //var data = new Domain.ExportData();             
+            //Hibernator serializer = new Hibernator();
+            //serializer.Save(data);            
+            //// read from access
+            //data = serializer.Load();
 
-                        // read the sap data
-                        sapconnection.Open();
-                        var importer = new Database2Domain(sapconnection);
-                        var data = importer.ReadEindArtikelData();
-                        //var data = importer.ReadEindArtikelData("42760X99");
-                        //var data = importer.ReadEindArtikelData("81110X99");
-                        //var data = importer.ReadEindArtikelData("14009Z25");
-                        //var data = importer.ReadEindArtikelData("01050D15");            
-                        sapconnection.Close();
+            Output.Info("eindartikelen:" + data.EindArtikelen.Count);
+            Output.Info("recepturen:" + data.ReceptuurArtikelen.Count);
+            Output.Info("verpakkingen:" + data.VerpakkingsArtikelen.Count);
+            Output.Info("grondstoffen:" + data.GrondstofArtikelen.Count);
+            Output.Info("ingredienten:" + data.IngredientArtikelen.Count);
 
-                        //var data = new Domain.ExportData();             
-                        //Hibernator serializer = new Hibernator();
-                        //serializer.Save(data);            
-                        //// read from access
-                        //data = serializer.Load();
+            // write the xml
+            var exporter = new Domain2Xml();
+            exporter.WriteData(data);
 
-                        Output.Info("eindartikelen:" + data.EindArtikelen.Count);
-                        Output.Info("recepturen:" + data.ReceptuurArtikelen.Count);
-                        Output.Info("verpakkingen:" + data.VerpakkingsArtikelen.Count);
-                        Output.Info("grondstoffen:" + data.GrondstofArtikelen.Count);
-                        Output.Info("ingredienten:" + data.IngredientArtikelen.Count);
-
-                        // write the xml
-                        var exporter = new Domain2Xml();
-                        exporter.WriteData(data);
-                        */
             Output.Info("Press any key to continue...");
             Console.In.Read();
 
             // dispose everything
             Output.Dispose();
-            sdk.Dispose();
         }
     }
 }
