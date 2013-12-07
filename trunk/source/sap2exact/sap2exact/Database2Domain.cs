@@ -192,6 +192,10 @@ namespace sap2exact
                 AND MARA.MATNR = :matnr
             ";
             var artikelrow = QueryRow(artikelsql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", matnr } });
+            if (artikelrow == null)
+            {
+                throw new Exception("artikel:" + matnr + " is niet gevonden!");
+            }
             var mtart = artikelrow["mtart"].ToString();
             switch (mtart)
             {
@@ -502,13 +506,6 @@ JOIN STAS
 JOIN STPO
     ON STPO.MANDT = MAST.MANDT 
     AND STPO.STLNR= MAST.STLNR
-    AND NOT STPO.STPOZ IN
-    (
-        SELECT PREV_STPO.VGPZL
-        FROM STPO PREV_STPO
-        WHERE PREV_STPO.MANDT = MAST.MANDT 
-        AND PREV_STPO.STLNR= MAST.STLNR        
-    )
     AND  STPO.STLKN = STAS.STLKN
 WHERE MAST.MANDT= :mandt
 AND MAST.WERKS= '0001'
