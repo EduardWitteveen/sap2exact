@@ -23,8 +23,9 @@ namespace sap2exact.SapSDK
 
             // enable tracing for client
             rfcsession.Option["trace.file"] = new System.IO.FileInfo("sap-rpc.log").FullName;
+
             rfcsession.LicenseData.Owner = "(unregistered DEMO version)";
-            rfcsession.LicenseData.key = "1EX4839S13W620TBRZ44NRE4ALBCVJH";            
+            rfcsession.LicenseData.key = "8GGX9G4ZDRUJ1T1RU8FR5UMSPXQ9QT";
             
             // connect and check error
             rfcsession.Connect();
@@ -34,6 +35,16 @@ namespace sap2exact.SapSDK
 
         public string GetLongText(string mandt, string stlty, string stlnr, string stlkn, string stpoz)
         {
+            string tdname = mandt + stlty + stlnr + stlkn + stpoz;
+            System.Diagnostics.Debug.Assert(tdname.Length == 28);
+
+            var cachefile = new System.IO.FileInfo(tdname + ".sap-longtext.cache");
+            if (cachefile.Exists)
+            {
+                // already cached
+                System.Diagnostics.Debug.WriteLine("\tSAP-SDK:reading longtext from cache file:" + cachefile.FullName);
+                return System.IO.File.ReadAllText(cachefile.FullName);
+            }
             //  SELECT *
             //  FROM STXL
             //  WHERE TDNAME = '100M000024700000000500000010'
@@ -48,8 +59,7 @@ namespace sap2exact.SapSDK
             // enter the parameters
             secept.RfcConnector.RfcFields newrow = fc.Tables["TEXT_LINES"].Rows.AddRow();
             newrow["TDOBJECT"].value = "BOM";
-            string tdname = "100M000024700000000500000010";
-            System.Diagnostics.Debug.Assert(tdname.Length == 28);
+            //string tdname = "100M000024700000000500000010";
             newrow["TDNAME"].value = tdname;
             newrow["TDID"].value = "MPO";
             newrow["TDSPRAS"].value = "N";
@@ -61,15 +71,17 @@ namespace sap2exact.SapSDK
                 rfcsession.Disconnect();
                 throw new Exception(rfcsession.ErrorInfo.Message);
             }
-            StringBuilder result = new StringBuilder();
+            StringBuilder builder = new StringBuilder();
             foreach (secept.RfcConnector.RfcFields row in fc.Tables["TEXT_LINES"].Rows)
             {
                 string tdline = row["TDLINE"].value;
-                result.AppendLine(tdline);
+                builder.AppendLine(tdline);
             }
-            System.Diagnostics.Debug.WriteLine("result:" + result);
+            System.Diagnostics.Debug.WriteLine("\tSAP-SDK:caching result to:" + cachefile.FullName);
+            string result = builder.ToString();
+            System.IO.File.WriteAllText(cachefile.FullName, result);
 
-            return result.ToString();
+            return result;
         }
 
         public void Dispose()

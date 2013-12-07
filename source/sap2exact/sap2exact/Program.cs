@@ -40,7 +40,9 @@ namespace sap2exact
             //var data = importer.ReadEindArtikelData("42760X99");
             //var data = importer.ReadEindArtikelData("81110X99");
             //var data = importer.ReadEindArtikelData("14009Z25");
-            //var data = importer.ReadEindArtikelData("01050D15");            
+            //var data = importer.ReadEindArtikelData("01050D15");
+            //var data = importer.ReadEindArtikelData("51541D15");
+            
             sapconnection.Close();
             sdk.Dispose();
 
