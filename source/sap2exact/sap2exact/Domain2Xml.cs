@@ -21,7 +21,7 @@ namespace sap2exact
         //const string OPVULLING = "VL_______";
         Conversie conversie;
 
-        static string CreateSapCode(Domain.BaseArtikel artikel)
+        public static string CreateSapCode(Domain.BaseArtikel artikel)
         {
             if(
                 artikel.GetType() == typeof(Domain.WeekWater)
@@ -121,7 +121,13 @@ namespace sap2exact
             item.AppendChild(issalesitem);
 
             var ispurchaseitem = xmldocument.CreateElement("IsPurchaseItem");
-            ispurchaseitem.AppendChild(xmldocument.CreateTextNode(artikel.GetType() == typeof(Domain.GrondstofArtikel) || artikel.GetType() == typeof(Domain.VerpakkingsArtikel)  ? "1" : "0"));
+            ispurchaseitem.AppendChild(
+                xmldocument.CreateTextNode(
+                    artikel.GetType() == typeof(Domain.GrondstofArtikel) 
+                        || artikel.GetType() == typeof(Domain.VerpakkingsArtikel) 
+                        || artikel.GetType() == typeof(Domain.EindArtikel) 
+                    ? "1" : "0")
+                );
             item.AppendChild(ispurchaseitem);
 
             var isserialnumberitem = xmldocument.CreateElement("IsSerialNumberItem");
@@ -129,7 +135,8 @@ namespace sap2exact
             item.AppendChild(isserialnumberitem);
 
             var isbatchitem = xmldocument.CreateElement("IsBatchItem");
-            isbatchitem.AppendChild(xmldocument.CreateTextNode("0"));
+            string isbatch = artikel.GetType() != typeof(Domain.VerpakkingsArtikel) ? "1" : "0";
+            isbatchitem.AppendChild(xmldocument.CreateTextNode(isbatch));
             item.AppendChild(isbatchitem);
 
             var issubassemblyitem = xmldocument.CreateElement("IsSubAssemblyItem");
@@ -346,55 +353,105 @@ namespace sap2exact
         {
             // leverancier info
             var itemaccounts = xmldocument.CreateElement("ItemAccounts");
-            var itemaccount = xmldocument.CreateElement("ItemAccount");
-            var account = xmldocument.CreateElement("Account");
-
-            string leverancierscode = "999990";
-            string leverancierstekst = "Samengesteld:" + artikel.MateriaalCode;
-            if (artikel.GetType() == typeof(Domain.EindArtikel))
             {
-                leverancierscode = "040012";
-                leverancierstekst = "Eindartikel:" + artikel.MateriaalCode;
+                // hoofdleverancier
+                var itemaccount = xmldocument.CreateElement("ItemAccount");
+                itemaccount.SetAttribute("default", "1");
+                var account = xmldocument.CreateElement("Account");
+
+                string leverancierscode = "999990";
+                string leverancierstekst = "Samengesteld:" + artikel.MateriaalCode;
+                if (artikel.GetType() == typeof(Domain.EindArtikel))
+                {
+                    //leverancierscode = "040012";
+                    leverancierscode = "999990";
+                    leverancierstekst = "Eindartikel:" + artikel.MateriaalCode;
+                }
+                else if (artikel.GetType() == typeof(Domain.GrondstofArtikel))
+                {
+                    leverancierscode = "999980";
+                    leverancierstekst = "Grondstof:" + artikel.MateriaalCode;
+                }
+                else if (artikel.GetType() == typeof(Domain.VerpakkingsArtikel))
+                {
+                    leverancierscode = "999980";
+                    leverancierstekst = "Verpakking:" + artikel.MateriaalCode;
+                }
+                account.SetAttribute("code", leverancierscode);
+                itemaccount.AppendChild(account);
+                var itemcode = xmldocument.CreateElement("ItemCode");
+                itemcode.AppendChild(xmldocument.CreateTextNode(leverancierstekst));
+                itemaccount.AppendChild(itemcode);
+
+                var purchase = xmldocument.CreateElement("Purchase");
+                var price = xmldocument.CreateElement("Price");
+                var currency = xmldocument.CreateElement("Currency");
+                currency.SetAttribute("code", "EUR");
+                price.AppendChild(currency);
+                purchase.AppendChild(price);
+                var value = xmldocument.CreateElement("Value");
+                value.AppendChild(xmldocument.CreateTextNode("0"));
+                price.AppendChild(value);
+
+                var unit = xmldocument.CreateElement("Unit");
+                //unit.SetAttribute("unit", artikel.BasishoeveelheidEenheid);
+                unit.SetAttribute("unit", Convert2VerpakkingsType(artikel, true));
+                unit.SetAttribute("type", "O");
+                unit.SetAttribute("active", "1");
+                purchase.AppendChild(unit);
+
+                var salesunit = xmldocument.CreateElement("SalesUnits");
+                salesunit.AppendChild(xmldocument.CreateTextNode(Convert.ToString(artikel.NettoGewicht)));
+                purchase.AppendChild(salesunit);
+                itemaccount.AppendChild(purchase);
+
+                itemaccounts.AppendChild(itemaccount);
             }
-            else if (artikel.GetType() == typeof(Domain.GrondstofArtikel))
+            if (artikel.GetType() == typeof(Domain.ReceptuurArtikel) || artikel.GetType() == typeof(Domain.EindArtikel))
             {
-                leverancierscode = "999980";
-                leverancierstekst = "Grondstof:" + artikel.MateriaalCode;
+                // kg = kg fix
+                var itemaccount = xmldocument.CreateElement("ItemAccount");
+                itemaccount.SetAttribute("default", "0");
+                var account = xmldocument.CreateElement("Account");
+
+                string leverancierscode = "999990";
+                string leverancierstekst = "Samengesteld:" + artikel.MateriaalCode;
+                if (artikel.GetType() == typeof(Domain.EindArtikel))
+                {
+                    leverancierscode = "040012";
+                    leverancierstekst = "Eindartikel:" + artikel.MateriaalCode;
+                }
+                account.SetAttribute("code", leverancierscode);
+                itemaccount.AppendChild(account);
+                var itemcode = xmldocument.CreateElement("ItemCode");
+                itemcode.AppendChild(xmldocument.CreateTextNode(leverancierstekst));
+                itemaccount.AppendChild(itemcode);
+
+                var purchase = xmldocument.CreateElement("Purchase");
+                var price = xmldocument.CreateElement("Price");
+                var currency = xmldocument.CreateElement("Currency");
+                currency.SetAttribute("code", "EUR");
+                price.AppendChild(currency);
+                purchase.AppendChild(price);
+                var value = xmldocument.CreateElement("Value");
+                value.AppendChild(xmldocument.CreateTextNode("0"));
+                price.AppendChild(value);
+
+                var unit = xmldocument.CreateElement("Unit");
+                // KG == KG!
+                unit.SetAttribute("unit", Convert2VerpakkingsType(artikel, false));
+                unit.SetAttribute("type", "O");
+                unit.SetAttribute("active", "1");
+                purchase.AppendChild(unit);
+
+                var salesunit = xmldocument.CreateElement("SalesUnits");
+                // KG == KG!
+                salesunit.AppendChild(xmldocument.CreateTextNode("1"));
+                purchase.AppendChild(salesunit);
+                itemaccount.AppendChild(purchase);
+
+                itemaccounts.AppendChild(itemaccount);
             }
-            else if (artikel.GetType() == typeof(Domain.VerpakkingsArtikel))
-            {
-                leverancierscode = "999980";
-                leverancierstekst = "Verpakking:" + artikel.MateriaalCode;
-            }
-            account.SetAttribute("code", leverancierscode);
-            itemaccount.AppendChild(account);
-            var itemcode = xmldocument.CreateElement("ItemCode");
-            itemcode.AppendChild(xmldocument.CreateTextNode(leverancierstekst));
-            itemaccount.AppendChild(itemcode);
-
-            var purchase = xmldocument.CreateElement("Purchase");
-            var price = xmldocument.CreateElement("Price");
-            var currency = xmldocument.CreateElement("Currency");
-            currency.SetAttribute("code", "EUR");
-            price.AppendChild(currency);
-            purchase.AppendChild(price);
-            var value = xmldocument.CreateElement("Value");
-            value.AppendChild(xmldocument.CreateTextNode("0"));
-            price.AppendChild(value);
-
-            var unit = xmldocument.CreateElement("Unit");
-            //unit.SetAttribute("unit", artikel.BasishoeveelheidEenheid);
-            unit.SetAttribute("unit", Convert2VerpakkingsType(artikel, true));            
-            unit.SetAttribute("type", "O");
-            unit.SetAttribute("active", "1");
-            purchase.AppendChild(unit);
-
-            var salesunit = xmldocument.CreateElement("SalesUnits");
-            salesunit.AppendChild(xmldocument.CreateTextNode(Convert.ToString(artikel.NettoGewicht)));
-            purchase.AppendChild(salesunit);
-            itemaccount.AppendChild(purchase);
-
-            itemaccounts.AppendChild(itemaccount);
             item.AppendChild(itemaccounts);
 
             // magazijn info
@@ -421,7 +478,7 @@ namespace sap2exact
             var shelflife = xmldocument.CreateElement("ShelfLife");
             //shelflife.AppendChild(xmldocument.CreateTextNode(Convert.ToString(artikel.HoudbaarheidInDagen)));
             shelflife.AppendChild(xmldocument.CreateTextNode("0"));
-            item.AppendChild(shelflife);            
+            item.AppendChild(shelflife);
 
             // classificatie icp = goederen
             var classification = xmldocument.CreateElement("TaxItemClassification");
@@ -547,6 +604,17 @@ namespace sap2exact
 
             var freefields = xmldocument.CreateElement("FreeFields");
             var freetexts = xmldocument.CreateElement("FreeTexts");
+            var sa = artikel as Domain.BaseSamengesteldArtikel;
+            if (sa != null && artikel.NettoGewicht != 1)
+            {
+                var freetext6 = xmldocument.CreateElement("FreeText");
+                freetext6.SetAttribute("number", "6");
+                string ompakking = Convert2VerpakkingsType(artikel, true) + " " + artikel.NettoGewicht + " " + Convert2VerpakkingsType(artikel, false);
+                freetext6.AppendChild(
+                    xmldocument.CreateTextNode(ompakking)
+                );
+                freetexts.AppendChild(freetext6);
+            }
             freefields.AppendChild(freetexts);
 
             var freedates = xmldocument.CreateElement("FreeDates");

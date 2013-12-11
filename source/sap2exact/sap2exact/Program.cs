@@ -36,6 +36,7 @@ namespace sap2exact
             );
             var importer = new Database2Domain(sapconnection, sdk);
 
+            //var data = importer.ReadEindArtikelData("01005D06");
             var data = importer.ReadEindArtikelData();
             //var data = importer.ReadEindArtikelData("42760X99");
             //var data = importer.ReadEindArtikelData("81110X99");
@@ -51,6 +52,40 @@ namespace sap2exact
             //serializer.Save(data);            
             //// read from access
             //data = serializer.Load();
+
+            // -----------------------------------------------------------------------
+            // HACK: tekstregels onderaan ( pos + 1000)
+            // HACK: exporteren artikelcode met notities
+            // -----------------------------------------------------------------------
+            var workbook = new ClosedXML.Excel.XLWorkbook();
+            var worksheet = workbook.Worksheets.Add("data");
+            foreach(Domain.BaseArtikel baseartikel in data.AlleArtikelen.Values) {
+                var samengesteldartikel = baseartikel as Domain.BaseSamengesteldArtikel;
+                if (samengesteldartikel != null)
+                {
+                    foreach(Domain.Stuklijst stuklijst in samengesteldartikel.Stuklijsten) {
+                        foreach (Domain.StuklijstRegel regel in stuklijst.StuklijstRegels)
+                        {
+                            var tekstregel = regel.Artikel as Domain.TekstArtikel;
+                            if (tekstregel != null)
+                            {
+                                // tekstregel
+                                // onderaan plaatsen
+                                regel.Volgnummer += 1000;
+                                // en exporteren             
+                                ClosedXML.Excel.IXLRows rows = worksheet.Row(1).InsertRowsAbove(1);
+                                ClosedXML.Excel.IXLRow row = rows.First();
+                                row.Cell(1).Value = Domain2Xml.CreateSapCode(samengesteldartikel);
+                                row.Cell(2).Value = tekstregel.Tekst;
+                            }
+                        }
+                    }
+                }
+            }
+            var exportfile = new System.IO.FileInfo("notities.xlsx");
+            if (exportfile.Exists) exportfile.Delete();
+            workbook.SaveAs(exportfile.FullName);
+            Output.Info("notities in:" + exportfile.FullName);
 
             Output.Info("eindartikelen:" + data.EindArtikelen.Count);
             Output.Info("recepturen:" + data.ReceptuurArtikelen.Count);

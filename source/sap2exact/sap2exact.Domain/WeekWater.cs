@@ -8,7 +8,7 @@ namespace sap2exact.Domain
     public class WeekWater: GrondstofArtikel
     {
         public WeekWater(){
-            MateriaalCode = "316001";
+            MateriaalCode = "316004";
             ArtikelOmschrijving = "WEEKWATER";
         }
     }
