@@ -13,6 +13,8 @@ namespace sap2exact.Domain
         public virtual double ReceptuurEenheidFactor { get; set; }
         public virtual string ReceptuurEenheid { get; set; }
         public virtual string ReceptuurEenheidConversie { get; set; }
+        public virtual string ReceptuurSortBegrip { get; set; }
+
         public virtual BaseArtikel Artikel { get; set; }
 
         internal StuklijstRegel Clone()

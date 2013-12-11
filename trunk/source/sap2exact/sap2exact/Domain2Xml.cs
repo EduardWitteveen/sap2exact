@@ -334,6 +334,13 @@ namespace sap2exact
                         backflush.AppendChild(xmldocument.CreateTextNode("0"));
                         bomline.AppendChild(backflush);
 
+                        if (receptuurregel.ReceptuurSortBegrip != null)
+                        {
+                            var positionnumber = xmldocument.CreateElement("Positionnumber");
+                            positionnumber.AppendChild(xmldocument.CreateTextNode(receptuurregel.ReceptuurSortBegrip));
+                            bomline.AppendChild(positionnumber);
+                        }                        
+
                         var bomquantity = xmldocument.CreateElement("Quantity");
                         bomquantity.AppendChild(xmldocument.CreateTextNode(receptuurregel.ReceptuurRegelAantal.ToString()));
                         bomline.AppendChild(bomquantity);
@@ -631,6 +638,20 @@ namespace sap2exact
             freenumer7.SetAttribute("number", "7");
             freenumer7.AppendChild(xmldocument.CreateTextNode(Convert.ToString(artikel.NettoGewicht)));
             freenumbers.AppendChild(freenumer7);
+            // batchgrootte
+            if (sa != null && sa.Stuklijsten.Count > 0)
+            {
+                // TODO: altijd van de eerste stuklijst gevonden!!!
+                if (sa.Stuklijsten.Count > 1)
+                {
+                    Output.Error("voor artikel # " + artikel.MateriaalCode + " batchgrootte naar vrij veld:  meerdere stuklijsten, eerste stuklijst wordt gebruikt");
+                }
+                double batchgrootte = sa.Stuklijsten[0].StuklijstTotaalAantal;
+                var freenumer13 = xmldocument.CreateElement("FreeNumber");
+                freenumer13.SetAttribute("number", "13");
+                freenumer13.AppendChild(xmldocument.CreateTextNode(Convert.ToString(batchgrootte)));
+                freenumbers.AppendChild(freenumer13);
+            }
             
             freefields.AppendChild(freenumbers);
 

@@ -57,8 +57,9 @@ namespace sap2exact
             // HACK: tekstregels onderaan ( pos + 1000)
             // HACK: exporteren artikelcode met notities
             // -----------------------------------------------------------------------
-            var workbook = new ClosedXML.Excel.XLWorkbook();
-            var worksheet = workbook.Worksheets.Add("data");
+            DataTable log = new DataTable();
+            log.Columns.Add("artikel", typeof(string));
+            log.Columns.Add("text", typeof(string));
             foreach(Domain.BaseArtikel baseartikel in data.AlleArtikelen.Values) {
                 var samengesteldartikel = baseartikel as Domain.BaseSamengesteldArtikel;
                 if (samengesteldartikel != null)
@@ -73,15 +74,17 @@ namespace sap2exact
                                 // onderaan plaatsen
                                 regel.Volgnummer += 1000;
                                 // en exporteren             
-                                ClosedXML.Excel.IXLRows rows = worksheet.Row(1).InsertRowsAbove(1);
-                                ClosedXML.Excel.IXLRow row = rows.First();
-                                row.Cell(1).Value = Domain2Xml.CreateSapCode(samengesteldartikel);
-                                row.Cell(2).Value = tekstregel.Tekst;
+                                DataRow logrow = log.NewRow();
+                                logrow["artikel"] = Domain2Xml.CreateSapCode(samengesteldartikel);
+                                logrow["text"] = tekstregel.Tekst;
+                                log.Rows.Add(logrow);
                             }
                         }
                     }
                 }
             }
+            var workbook = new ClosedXML.Excel.XLWorkbook();
+            var worksheet = workbook.Worksheets.Add(log, "log");
             var exportfile = new System.IO.FileInfo("notities.xlsx");
             if (exportfile.Exists) exportfile.Delete();
             workbook.SaveAs(exportfile.FullName);
