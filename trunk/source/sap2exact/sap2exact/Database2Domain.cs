@@ -148,15 +148,16 @@ namespace sap2exact
 	                    AND MARA.MANDT = 100
                 ";
                 var artikeltable = QueryTable(artikelsql);
-
+                var startTime = DateTime.Now;
                 foreach (DataRow artikelrow in artikeltable.Rows)
                 {
                     int matdt = Convert.ToInt32(artikelrow["mandt"]);
                     string matnr = Convert.ToString(artikelrow["matnr"]);
 
-                    int huidigeregel = artikeltable.Rows.IndexOf(artikelrow);
+                    int huidigeregel = artikeltable.Rows.IndexOf(artikelrow) + 1;   // +1   ==>   x/0  :-)
                     int totaalregels = artikeltable.Rows.Count;
-                    Output.Info("[ " + (int)((100.0 / totaalregels) * huidigeregel) + "% ] START:" + matnr);
+                    var eta = TimeSpan.FromTicks((DateTime.Now.Subtract(startTime).Ticks / huidigeregel * (totaalregels - huidigeregel)));
+                    Output.Info("[ " + (int)((100.0 / totaalregels) * huidigeregel) + "%  ETA: " + eta + "]");
 
                     if (data.Retrieve(matnr) == null)
                     {

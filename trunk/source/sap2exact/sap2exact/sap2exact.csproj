@@ -95,7 +95,9 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
-    <None Include="conversie.xlsx" />
+    <None Include="conversie.xlsx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
