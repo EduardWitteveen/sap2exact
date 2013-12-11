@@ -158,7 +158,7 @@ namespace sap2exact
                     int totaalregels = artikeltable.Rows.Count;
                     var expected = TimeSpan.FromTicks((DateTime.Now.Subtract(startTime).Ticks / huidigeregel * (totaalregels - huidigeregel)));
                     var totaal = TimeSpan.FromTicks((DateTime.Now.Subtract(startTime).Ticks / huidigeregel * totaalregels));
-                    Output.Info("[ " + (int)((100.0 / totaalregels) * huidigeregel) + "%  EXPECTED: " + expected + " TOTAL:" + totaal + " ETA: " + DateTime.Now.Add(expected) + "]");
+                    Output.Info("[ " + (int)((100.0 / totaalregels) * huidigeregel) + "%  EXPECTED: " + expected + " TOTAL: " + totaal + " ETA: " + DateTime.Now.Add(expected) + "]");
 
                     if (data.Retrieve(matnr) == null)
                     {
@@ -720,7 +720,9 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR";
                     sl.StuklijstVersion = versienummer;
                     break;
                 }
-                while(true);
+#pragma warning disable
+                while (true);
+#pragma warning restore
             }
             return artikel;
         }
