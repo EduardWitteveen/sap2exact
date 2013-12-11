@@ -156,8 +156,9 @@ namespace sap2exact
 
                     int huidigeregel = artikeltable.Rows.IndexOf(artikelrow) + 1;   // +1   ==>   x/0  :-)
                     int totaalregels = artikeltable.Rows.Count;
-                    var eta = TimeSpan.FromTicks((DateTime.Now.Subtract(startTime).Ticks / huidigeregel * (totaalregels - huidigeregel)));
-                    Output.Info("[ " + (int)((100.0 / totaalregels) * huidigeregel) + "%  ETA: " + eta + "]");
+                    var expected = TimeSpan.FromTicks((DateTime.Now.Subtract(startTime).Ticks / huidigeregel * (totaalregels - huidigeregel)));
+                    var totaal = TimeSpan.FromTicks((DateTime.Now.Subtract(startTime).Ticks / huidigeregel * totaalregels));
+                    Output.Info("[ " + (int)((100.0 / totaalregels) * huidigeregel) + "%  EXPECTED: " + expected + " TOTAL:" + totaal + " ETA: " + DateTime.Now.Add(expected) + "]");
 
                     if (data.Retrieve(matnr) == null)
                     {
@@ -470,6 +471,7 @@ SELECT
     STAS.STASZ AS STAS_STASZ,
     STPO.LKENZ  AS STPO_LKENZ,
     STPO.STPOZ AS STPO_STPOZ,
+    STPO.SORTF AS STPO_SORTF,
     '------',
     STPO.POTX1 AS STPO_POTX1,
     STPO.POTX2 AS STPO_POTX2,
@@ -553,6 +555,7 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR";
                 var matnr = Convert.ToString(bomrow["STPO_idnrk"]);
                 var receptuurregel = new Domain.StuklijstRegel();
                 var posnr = Convert.ToString(bomrow["STPO_posnr"]);
+                
                 int found = 0;
                 if (!Int32.TryParse(posnr, out found))
                 {
@@ -603,6 +606,7 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR";
                 }
                 receptuurregel.ReceptuurRegelAantal = Convert.ToDouble(bomrow["STPO_menge"]);
                 receptuurregel.ReceptuurEenheid = Convert.ToString(bomrow["STPO_meins"]);
+                receptuurregel.ReceptuurSortBegrip = Convert.ToString(bomrow["STPO_SORTF"]);
 
                 if (childartikel.GetType() != typeof(Domain.TekstArtikel))
                 {
