@@ -119,33 +119,68 @@ namespace sap2exact
             if (artikelnummer == null)
             {
                 var artikelsql = @"
-                    -- AUFK - Order master data
-                    -- http://www.stechno.net/sap-tables.html?view=saptable&id=AUFK
-                    -- AFPO: Order item
-                    -- http://www.stechno.net/sap-tables.html?view=saptable&id=AFPO
-                    -- MARA: General Material Data
-                    -- http://www.stechno.net/sap-tables.html?view=saptable&id=MARA
-                    SELECT DISTINCT
-	                    MARA.MANDT,
-	                    MARA.MATNR
-                    FROM MARA
-                    INNER JOIN AFPO
-	                    ON AFPO.MATNR = MARA.MATNR
-	                    AND AFPO.MANDT  = MARA.MANDT
-                    INNER JOIN AUFK
-	                    ON AUFK.AUFNR = AFPO.AUFNR
-	                    AND AUFK.MANDT  = AFPO.MANDT 
-                    WHERE
-	                    NOT MARA.MATKL = 'VERVALLEN' 
-                        AND MARA.MTART = 'FERT'
-                        -- AND MARA.MATNR LIKE '33024%' 
-	                    AND
-	                    (
-		                    AUFK.ERDAT > 20120000 
-	                    OR 
-		                    AUFK.AEDAT > 20120000 
-	                    ) 
-	                    AND MARA.MANDT = 100
+SELECT 
+    MANDT,
+    MATNR,
+    MTART,
+    MAX(LAATSTEDATUM) AS LAATSTEDATUM
+FROM
+(
+    SELECT 
+        MARA.MANDT,
+        MARA.MATNR,
+        MARA.MTART,
+        MAX(AUFK.ERDAT) AS LAATSTEDATUM
+    FROM MARA
+    INNER JOIN AFPO
+        ON AFPO.MATNR = MARA.MATNR
+        AND AFPO.MANDT  = MARA.MANDT
+    INNER JOIN AUFK
+        ON AUFK.AUFNR = AFPO.AUFNR
+        AND AUFK.MANDT  = AFPO.MANDT 
+    WHERE NOT MARA.MATKL = 'VERVALLEN' 
+    AND NOT MARA.MTART IN 
+    (
+        'HALB',
+        'ZROH',
+        'ROH',
+        'INGR',
+        'VERP',
+        'LEER'
+    )
+    AND
+    (
+        AUFK.ERDAT >= 20120000 
+        OR 
+        AUFK.AEDAT >= 20120000 
+    ) 
+    AND MARA.MANDT = 100
+    GROUP BY MARA.MANDT, MARA.MATNR, MARA.MTART
+    UNION
+    SELECT
+        MARA.MANDT,
+        MARA.MATNR,
+        MARA.MTART,
+        MAX(S031.SPMON) * 100 AS LAATSTEDATUM
+    FROM MARA
+    INNER JOIN S031
+        ON S031.MATNR = MARA.MATNR
+        AND S031.MANDT  = MARA.MANDT
+    WHERE NOT MARA.MATKL = 'VERVALLEN' 
+    AND NOT MARA.MTART IN 
+    (
+        'HALB',
+        'ZROH',
+        'ROH',
+        'INGR',
+        'VERP',
+        'LEER'
+    )
+    AND S031.SPMON >= 201200
+    AND MARA.MANDT = 100
+    GROUP BY MARA.MANDT,  MARA.MATNR,  MARA.MTART
+) RECENT
+GROUP BY MANDT,  MATNR,  MTART
                 ";
                 var artikeltable = QueryTable(artikelsql);
                 var startTime = DateTime.Now;
@@ -202,6 +237,8 @@ namespace sap2exact
             switch (mtart)
             {
                 case "FERT":
+                case "HAWA":
+                case "HIBE":
                     artikel = new Domain.EindArtikel();
                     #region artikel belasting
                     var belastingsql = @"
@@ -211,6 +248,7 @@ namespace sap2exact
                             FROM MLAN
                             WHERE MLAN.MANDT = :mandt
                             AND MLAN.MATNR = :matnr
+                            AND NOT MLAN.TAXM1 = ''
                         ";
                     var belastingrow = QueryRow(belastingsql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", matnr } });
                     if (belastingrow != null)
@@ -246,8 +284,8 @@ namespace sap2exact
                     artikel.ExactGewensteBelastingCategorie = 4;
                     break;
                 default:
-                    string type = Convert.ToString(artikelrow["bom_artikelsoort"]);
-                    throw new NotImplementedException("unknown type:" + type);
+                    //string type = Convert.ToString(artikelrow["bom_artikelsoort"]);
+                    throw new NotImplementedException("unknown type:" + mtart);
             }
             artikel.MateriaalCode = Convert.ToString(artikelrow["matnr"]);
             artikel.TimeStamp = ConvertSapDate(artikelrow["laeda"], "artikel:" + artikel.MateriaalCode);
