@@ -193,7 +193,7 @@ GROUP BY MANDT,  MATNR,  MTART
                     int totaalregels = artikeltable.Rows.Count;
                     var expected = TimeSpan.FromTicks((DateTime.Now.Subtract(startTime).Ticks / huidigeregel * (totaalregels - huidigeregel)));
                     var totaal = TimeSpan.FromTicks((DateTime.Now.Subtract(startTime).Ticks / huidigeregel * totaalregels));
-                    Output.Info("[ " + (int)((100.0 / totaalregels) * huidigeregel) + "%  EXPECTED: " + expected + " TOTAL: " + totaal + " ETA: " + DateTime.Now.Add(expected) + "]");
+                    Output.Info("[ " + (int)((100.0 / totaalregels) * huidigeregel) + "%  verwacht: " + expected + " totaal: " + totaal + " eta: " + DateTime.Now.Add(expected) + "]");
 
                     if (data.Retrieve(matnr) == null)
                     {
