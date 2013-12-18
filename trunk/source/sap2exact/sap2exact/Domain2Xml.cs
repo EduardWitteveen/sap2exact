@@ -39,7 +39,7 @@ namespace sap2exact
             */
             string code = artikel.MateriaalCode.Trim();
             // wanneer de code start met een nummer, dan prefixen met "43" 
-            if (char.IsNumber(code[0]))
+            if (artikel.GetType() == typeof(Domain.EindArtikel) || char.IsNumber(code[0]))
             {
                 code = "43" + code;
             }
@@ -546,18 +546,10 @@ namespace sap2exact
             {
                 verpakkingstype = "vat";
             }
-            else if (verpakkingstype == "KAN")
-            {
-                verpakkingstype = "kan";
-            }
-            else if (verpakkingstype == "BA")
-            {
-                verpakkingstype = "ba";
-            }
             else
             {
                 Output.Error("unknown eenheid:" + verpakkingstype);
-                throw new NotImplementedException("no support voor verpakkingstype: " + verpakkingstype);
+                verpakkingstype = verpakkingstype.ToLower();
             }
             return verpakkingstype;
         }
