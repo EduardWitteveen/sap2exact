@@ -239,6 +239,7 @@ GROUP BY MANDT,  MATNR,  MTART
                 case "FERT":
                 case "HAWA":
                 case "HIBE":
+                case "NLAG":
                     artikel = new Domain.EindArtikel();
                     #region artikel belasting
                     var belastingsql = @"

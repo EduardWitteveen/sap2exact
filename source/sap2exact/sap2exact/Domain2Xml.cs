@@ -542,6 +542,14 @@ namespace sap2exact
             {
                 verpakkingstype = "bigbag";
             }
+            else if (verpakkingstype == "VAT")
+            {
+                verpakkingstype = "vat";
+            }
+            else if (verpakkingstype == "KAN")
+            {
+                verpakkingstype = "kan";
+            }
             else
             {
                 Output.Error("unknown eenheid:" + verpakkingstype);
