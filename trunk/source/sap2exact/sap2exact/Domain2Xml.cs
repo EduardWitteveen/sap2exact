@@ -550,6 +550,10 @@ namespace sap2exact
             {
                 verpakkingstype = "kan";
             }
+            else if (verpakkingstype == "BA")
+            {
+                verpakkingstype = "ba";
+            }
             else
             {
                 Output.Error("unknown eenheid:" + verpakkingstype);
