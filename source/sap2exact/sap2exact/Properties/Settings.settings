@@ -11,7 +11,7 @@
       <Value Profile="(Default)">Provider=Microsoft.ACE.OLEDB.12.0;Data Source="C:\exact importeren artikelen\source\access\conversie.accdb"</Value>
     </Setting>
     <Setting Name="export_xml" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">C:\exact importeren artikelen\export\access2exact.xml</Value>
+      <Value Profile="(Default)">C:\exact importeren artikelen\export\sap2exact.xml</Value>
     </Setting>
     <Setting Name="connection_string_sap" Type="(Connection string)" Scope="Application">
       <DesignTimeValue Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
