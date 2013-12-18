@@ -461,7 +461,7 @@ GROUP BY MANDT,  MATNR,  MTART
             #endregion artikel eenheid
 
 
-
+            // print the current code with the lexical depth
             string output = "";
             for (int i = 0; i < ident; i++) output += "\t";
             output +=artikel.MateriaalCode + " " + mtart;

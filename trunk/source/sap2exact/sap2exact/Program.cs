@@ -37,6 +37,7 @@ namespace sap2exact
             var importer = new Database2Domain(sapconnection, sdk);
 
             var data = importer.ReadEindArtikelData();
+            //var data = importer.ReadEindArtikelData("02002Z26");            
             //var data = importer.ReadEindArtikelData("PE570000");
             //var data = importer.ReadEindArtikelData("93380D10");
             //var data = importer.ReadEindArtikelData("01005D06");
