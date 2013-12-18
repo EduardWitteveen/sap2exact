@@ -256,11 +256,11 @@ namespace sap2exact
 
         XmlElement AddXmlSamengesteldArtikel(XmlElement item, Domain.BaseSamengesteldArtikel artikel)
         {
-            if (typeof(Domain.EindArtikel) == artikel.GetType())
+            if (artikel.Intrastat  != null)
             {
                 var statistical = xmldocument.CreateElement("Statistical");
                 var number = xmldocument.CreateElement("Number");
-                number.AppendChild(xmldocument.CreateTextNode(((Domain.EindArtikel)artikel).Intrastat));
+                number.AppendChild(xmldocument.CreateTextNode(artikel.Intrastat));
                 statistical.AppendChild(number);
                 var units = xmldocument.CreateElement("Units");
                 units.AppendChild(xmldocument.CreateTextNode("0"));
