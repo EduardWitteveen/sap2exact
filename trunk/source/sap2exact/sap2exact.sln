@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sap2exact.SapSDK", "sap2exa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sap2exact.Leveranciers", "sap2exact.Leveranciers\sap2exact.Leveranciers.csproj", "{2F7E50A3-E7E4-479D-A622-0B7E8CFF6FA8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sap2exact.Artikelgroepen", "sap2exact.Artikelgroepen\sap2exact.Artikelgroepen.csproj", "{2720ADBE-10E6-4185-8AD4-543C574413C0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,10 @@ Global
 		{2F7E50A3-E7E4-479D-A622-0B7E8CFF6FA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2F7E50A3-E7E4-479D-A622-0B7E8CFF6FA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2F7E50A3-E7E4-479D-A622-0B7E8CFF6FA8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2720ADBE-10E6-4185-8AD4-543C574413C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2720ADBE-10E6-4185-8AD4-543C574413C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2720ADBE-10E6-4185-8AD4-543C574413C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2720ADBE-10E6-4185-8AD4-543C574413C0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
