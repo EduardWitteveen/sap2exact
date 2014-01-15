@@ -17,7 +17,7 @@ namespace sap2exact.Leveranciers
 
             SapDatabaseConnection connection = new SapDatabaseConnection(Properties.Settings.Default.connection_string_sap);
             connection.Open();
-
+/*
             var sql = @"
 SELECT
     marav.matnr,
@@ -69,8 +69,61 @@ JOIN lfa1
     ON lfa1.lifnr = eina.lifnr
 ORDER BY marav.matnr
 ";
-            connection.Export2Excel("leveranciers-artikel-prijs", sql);
-
+                        //connection.Export2Excel("leveranciers-artikel-prijs", sql);
+                        connection.Export2Csv("leveranciers-artikel-prijs", sql);
+*/
+            var sql = @"
+SELECT
+    VBAP.VBELN,
+    VBAP.POSNR,
+    VBAP.MATNR,
+    '43' || VBAP.MATNR AS exactnr,
+    VBAP.ARKTX,
+    VBAP.ZIEME,
+    VBAP.MEINS,
+    VBAP.NETWR,
+    VBAP.WAERK,
+    VBAP.KWMENG,
+    VBAP.LSMENG,
+    VBAP.KBMENG,
+    VBAP.KLMENG,
+    VBAP.VRKME,
+    VBAP.BRGEW,
+    VBAP.NTGEW,
+    VBAP.GEWEI,
+    VBAP.ERDAT,
+    VBAP.NETPR,
+    VBAP.KPEIN,
+    VBAP.KMEIN,
+    VBAP.WAVWR,
+    VBAP.KZWI1,
+    VBAP.KZWI2,
+    VBAP.KZWI3,    
+    VBAP.KZWI4,
+    VBAP.KZWI5,
+    VBAP.KZWI6,
+    VBAP.AEDAT,
+    VBAP.CMPRE,
+    VBAP.CMPRE_FLT,
+    VBAP.MWSBP,
+    VBAP.KOSTL,
+    VBEP.EDATU,
+    '----------------' AS DATUM,
+    YEAR(VBEP.EDATU) AS JAAR,
+    MONTH(VBEP.EDATU) AS MAAND,
+    DAY(VBEP.EDATU) AS DAG,
+    '----------------' AS VBAP,
+    VBAP.*,
+    '----------------' AS VBEP,
+    VBEP.*
+FROM VBAP
+JOIN VBEP
+ON VBEP.VBELN = VBAP.VBELN
+AND VBEP.POSNR = VBAP.POSNR
+WHERE VBEP.EDATU >= 20120101
+ORDER BY VBEP.EDATU DESC
+";
+            connection.Export2Csv("sales", sql);
             connection.Close();
         }
     }

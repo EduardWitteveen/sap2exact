@@ -100,5 +100,66 @@ namespace sap2exact.Leveranciers
 
             System.Diagnostics.Debug.WriteLine("Exporting finished to file//:" + exportfile.FullName);
         }
+
+        public void Export2Csv(string name, string sql, Dictionary<string, object> parameters = null)
+        {
+            System.Diagnostics.Debug.WriteLine("Exporting: " + name + "\n\t" + sql);
+
+            // query
+            var cmd = new MaxDB.Data.MaxDBCommand(sql, sapconnection);
+            cmd.CommandType = System.Data.CommandType.Text;
+            if (parameters != null)
+            {
+                foreach (string key in parameters.Keys)
+                {
+                    cmd.Parameters.Add(key, parameters[key]);
+                }
+            }
+            var reader = cmd.ExecuteReader();
+            var table = new DataTable();
+            table.Load(reader);
+
+            // export to csv
+            var exportfile = new System.IO.FileInfo(name + ".csv");
+            if (exportfile.Exists) exportfile.Delete();            
+            var sw = new System.IO.StreamWriter(exportfile.FullName);
+
+            bool firstcolumn = true;
+            foreach (DataColumn column in table.Columns)
+            {
+                String columnname = column.ColumnName.Replace("\"", "\"\"") ;
+                if (firstcolumn)
+                {
+                    sw.Write("\"" + columnname + "\"");
+                    firstcolumn = false;
+                }
+                else
+                {
+                    sw.Write(";\"" + columnname +  "\"");
+                }
+            }
+            sw.Write("\n");
+            foreach (DataRow row in table.Rows)
+            {
+                firstcolumn = true;
+                foreach (DataColumn column in table.Columns)
+                {
+                    String columnvalue = Convert.ToString(row[column]).Replace("\"", "\"\"");
+                    if (firstcolumn)
+                    {
+                        sw.Write("\"" + columnvalue + "\"");
+                        firstcolumn = false;
+                    }
+                    else
+                    {
+                        sw.Write(";\"" + columnvalue + "\"");
+                    }
+                }
+                sw.Write("\n");
+            }
+            sw.Close();
+            System.Diagnostics.Debug.WriteLine("Exporting finished to file//:" + exportfile.FullName);
+        }
+
     }
 }

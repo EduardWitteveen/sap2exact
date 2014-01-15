@@ -98,7 +98,7 @@ namespace sap2exact
         }
 
 
-        public Domain.ExportData ReadEindArtikelData(String artikelnummer = null)
+        public Domain.ExportData ReadStartArtikelData(String[] artikelnummers = null)
         {
             /*
             General Material Data     MARA
@@ -116,7 +116,7 @@ namespace sap2exact
              */
 
             data = new Domain.ExportData();
-            if (artikelnummer == null)
+            if (artikelnummers == null)
             {
                 var artikelsql = @"
 SELECT 
@@ -208,7 +208,10 @@ GROUP BY MANDT,  MATNR,  MTART
             }
             else
             {
-                data.Add(ReadArtikelData(100, artikelnummer, 1));                
+                foreach (string artikelnummer in artikelnummers)
+                {
+                    data.Add(ReadArtikelData(100, artikelnummer, 1));
+                }
             }
             return data;
         }
