@@ -49,6 +49,12 @@
     <StartupObject>sap2exact.SapSDK.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ClosedXML">
+      <HintPath>..\..\libs\ClosedXML_0.68\ClosedXML.dll</HintPath>
+    </Reference>
+    <Reference Include="MaxDB.Data">
+      <HintPath>..\..\libs\MaxDBProvider_0.9\MaxDB.Data.dll</HintPath>
+    </Reference>
     <Reference Include="RFCConnectorInterop">
       <HintPath>..\..\libs\RFCConnector\RFCConnectorInterop.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
@@ -63,6 +69,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
+    <Compile Include="SapDatabaseConnection.cs" />
     <Compile Include="SDK.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
