@@ -185,10 +185,15 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR";
                 {
                     grondstofcode = referentieregel.grondstofcode,
                     grondstofomschrijving = referentieregel.grondstofomschrijving,
+
+                    variantcode = Convert.ToString(bomrow["MAST_STLAL"]),
+                    variantomschrijving = Convert.ToString(bomrow["STKO_STKTX"]),
+
                     ingredientposnr = posnr,
                     ingredientcode = matnr,
                 };
 
+                // taal fix: done
                 var descriptionsql = @"
                 -- Material ArtikelOmschrijvingen
                 -- http://www.stechno.net/sap-tables.html?view=saptable&id=MAKT
@@ -196,14 +201,15 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR";
                 FROM MAKT
                 WHERE MAKT.MANDT = :mandt
                 AND MAKT.MATNR = :matnr
-                AND MAKT.SPRAS = 'N'
-            ";
-                var descriptionrow = sapconnection.QueryRow(descriptionsql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", matnr } });
-                if (descriptionrow != null)
+                ";
+
+                System.Data.DataTable result = sapconnection.QueryTable(descriptionsql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", matnr } });
+                foreach (System.Data.DataRow descriptionrow in result.Rows)
                 {
-                    regel.grondstofomschrijving = Convert.ToString(descriptionrow["maktx"]);
+                    regel.ingredienttaalcode = Convert.ToString(descriptionrow["spras"]);
+                    regel.ingredientomschrijving = Convert.ToString(descriptionrow["maktx"]);
+                    GetCharacteristics(regel, mandt, matnr);
                 }
-                GetCharacteristics(regel, mandt, matnr);
             }
         }
 
@@ -220,13 +226,16 @@ ORDER BY MAST.STLAN, MAST.STLAL, STPO.POSNR";
                             skip.Add(matnr, matnr);
                         }
             */
+            // taal fix: done
             var characteristicssql = @"
 SELECT
     AUSP.MANDT,
+    CABNT.SPRAS,
     AUSP.OBJEK,
     AUSP.ATINN,
     AUSP.ATWRT,
     AUSP.ATFLV,
+    CABN.MSEHI,    
     CABN.ATNAM,
     CABNT.ATBEZ,
     CAWN.ATZHL,
@@ -239,7 +248,6 @@ LEFT OUTER JOIN CABN
 LEFT OUTER JOIN CABNT  
     ON CABNT.MANDT = AUSP.MANDT
     AND CABNT.ATINN =  AUSP.ATINN
-    AND CABNT.SPRAS = 'N'    
 LEFT OUTER JOIN CAWN
     ON CAWN.MANDT = AUSP.MANDT
     AND CAWN.ATINN =  AUSP.ATINN
@@ -248,11 +256,24 @@ LEFT OUTER JOIN CAWNT
     ON CAWNT.MANDT = AUSP.MANDT
     AND CAWNT.ATINN= AUSP.ATINN
     AND CAWNT.ATZHL =  CAWN.ATZHL
-    AND CAWNT.SPRAS = 'N'
+    AND CAWNT.SPRAS = CABNT.SPRAS
 WHERE AUSP.MANDT = :mandt
 AND AUSP.OBJEK = :matnr
-ORDER BY ATNAM";
-            var characteristicstable = sapconnection.QueryTable(characteristicssql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", matnr } });
+";
+            System.Data.DataTable characteristicstable = null;
+//            if (taal != null)
+//            {
+//                characteristicssql += @"
+//                AND CABNT.SPRAS = :spras
+//                ORDER BY ATNAM, CABNT.SPRAS";
+//                characteristicstable  = sapconnection.QueryTable(characteristicssql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", matnr }, { ":spras", referentieregel.taalcode } }); 
+//            }
+//            else
+//            {
+                characteristicssql += @"
+                ORDER BY ATNAM, CABNT.SPRAS";
+                characteristicstable  = sapconnection.QueryTable(characteristicssql, new Dictionary<string, object>() { { ":mandt", mandt }, { ":matnr", matnr }}); 
+            //}
 
             if (characteristicstable.Rows.Count == 0)
             {
@@ -265,16 +286,26 @@ ORDER BY ATNAM";
                 {
                     grondstofcode = referentieregel.grondstofcode,
                     grondstofomschrijving = referentieregel.grondstofomschrijving,
+
+                    variantcode = referentieregel.variantcode,
+                    variantomschrijving = referentieregel.variantomschrijving,
+
                     ingredientposnr = referentieregel.ingredientposnr,
+                    ingredienttaalcode = referentieregel.ingredienttaalcode,
                     ingredientcode = referentieregel.ingredientcode,
                     ingredientomschrijving = referentieregel.ingredientomschrijving,
+
+                    klassetaalcode = Convert.ToString(characteristicsrow["spras"]),                    
                     klassecode = Convert.ToString(characteristicsrow["atnam"]),
                     sleutelomschrijving = Convert.ToString(characteristicsrow["atbez"]),
                     waardecode = Convert.ToString(characteristicsrow["atwrt"]),
                     waardeomschrijving = Convert.ToString(characteristicsrow["atwtb"])
                 };
-                if (regel.waardecode == "") regel.waardecode = Convert.ToString(characteristicsrow["atflv"]);
-                if (regel.waardeomschrijving == "") regel.waardeomschrijving = Convert.ToString(characteristicsrow["atflv"]);
+                if (regel.waardecode == "" && regel.waardeomschrijving == "")
+                {
+                    regel.waardecode = Convert.ToString(characteristicsrow["atflv"]);
+                    regel.waardeomschrijving = Convert.ToString(characteristicsrow["msehi"]);
+                }
                 results.Add(regel);
             }
         }
